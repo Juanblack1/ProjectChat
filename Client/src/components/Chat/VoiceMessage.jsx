@@ -1,5 +1,6 @@
 import { useStateProvider } from "@/context/StateContext";
 import { HOST } from "@/utils/ApiRoutes";
+import { getAssetUrl } from "@/utils/AssetUrl";
 import { calculateTime } from "@/utils/CalculateTime";
 import { useEffect, useRef, useState } from "react";
 import { FaPlay, FaStop } from "react-icons/fa";
@@ -42,7 +43,7 @@ function VoiceMessage({message}) {
     }, []);
 
     useEffect(() => {
-      const audioURL = `${HOST}/${message.message}`
+      const audioURL = getAssetUrl(message.message, HOST)
       const audio = new Audio(audioURL)
       setAudioMessage(audio)
       waveForm.current.load(audioURL)

@@ -2,6 +2,7 @@ import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { ADD_IMAGE_MESSAGE_ROUTE, ADD_MESSAGE_ROUTE } from "@/utils/ApiRoutes";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
+import { addDemoMessage, createDemoMessage, readFileAsDataUrl } from "@/utils/DemoData";
 import axios from "axios";
 import EmojiPicker from "emoji-picker-react";
 import dynamic from "next/dynamic";
@@ -60,17 +61,15 @@ function MessageBar() {
   const sendMessage = async() => {
     try {
       if (IS_DEMO_MODE) {
+        const newMessage = createDemoMessage({
+          contactId: currentChatUser.id,
+          type: "text",
+          message,
+        });
+        addDemoMessage(currentChatUser.id, newMessage);
         dispatch({
           type: reducerCases.ADD_MESSAGE,
-          newMessage: {
-            id: Date.now(),
-            senderId: userInfo.id,
-            recieverId: currentChatUser.id,
-            type: "text",
-            message,
-            messageStatus: "sent",
-            createdAt: new Date().toISOString(),
-          },
+          newMessage,
         });
         setMessage("")
         return;
@@ -114,6 +113,25 @@ function MessageBar() {
   const photoPickerChange = async (e) => {
     try{
       const file = e.target.files[0];
+      if (!file) return;
+
+      if (IS_DEMO_MODE) {
+        const imageUrl = await readFileAsDataUrl(file);
+        const newMessage = createDemoMessage({
+          contactId: currentChatUser.id,
+          type: "image",
+          message: imageUrl,
+        });
+        addDemoMessage(currentChatUser.id, newMessage);
+        dispatch({
+          type: reducerCases.ADD_MESSAGE,
+          newMessage,
+          fromSelf: true,
+        });
+        setGrabPhoto(false);
+        return;
+      }
+
       const formData = new FormData();
       formData.append("image", file);
       const response = await axios.post(ADD_IMAGE_MESSAGE_ROUTE, formData, {

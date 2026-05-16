@@ -1,6 +1,8 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { ADD_AUDIO_MESSAGE_ROUTE } from "@/utils/ApiRoutes";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
+import { addDemoMessage, createDemoMessage, readFileAsDataUrl } from "@/utils/DemoData";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { FaMicrophone, FaPauseCircle, FaPlay, FaStop, FaTrash } from "react-icons/fa";
@@ -24,8 +26,7 @@ function CaptureAudio({hide}) {
   const audioRef = useRef();
   const mediaRecorderRef = useRef();
   const waveFormRef = useRef();
-
-  let AudioFile = null;
+  const audioChunksRef = useRef([]);
 
   useEffect(() => {
     let interval;
@@ -106,20 +107,25 @@ function CaptureAudio({hide}) {
       mediaRecorderRef.current = mediaRecorder;
       audioRef.current.srcObject = stream;
 
-      const chunks = [];
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus"});
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm"});
         const audioURL = URL.createObjectURL(blob);
         const audio = new Audio(audioURL);
         setRecordedAudio(audio);
+        setRenderedAudio(new File([blob], "recording.webm", { type: blob.type }));
 
         waveForm.load(audioURL);
+        stream.getTracks().forEach((track) => track.stop());
       };
 
       mediaRecorder.start();
     }).catch((error) => {
       console.log("Error accessing microphone:", error);
+      setIsRecording(false);
     });
   };
   
@@ -128,23 +134,30 @@ function CaptureAudio({hide}) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       waveForm.stop();
-
-      const audioChunks = [];
-      mediaRecorderRef.current.addEventListener("dataavailable", (event) => {
-        audioChunks.push(event.data);
-      });
-
-      mediaRecorderRef.current.addEventListener("stop",  () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/mp3"});
-        const audioFile =  new File([audioBlob], "recording.mp3");
-        AudioFile =  new File([audioBlob], "recording.mp3");
-        setRenderedAudio(audioFile);
-      });
     }
   };
 
   const sendRecording = async () =>{
     try{
+      if (!renderedAudio) return;
+
+      if (IS_DEMO_MODE) {
+        const audioUrl = await readFileAsDataUrl(renderedAudio);
+        const newMessage = createDemoMessage({
+          contactId: currentChatUser.id,
+          type: "audio",
+          message: audioUrl,
+        });
+        addDemoMessage(currentChatUser.id, newMessage);
+        dispatch({
+          type: reducerCases.ADD_MESSAGE,
+          newMessage,
+          fromSelf: true,
+        });
+        hide(false)
+        return;
+      }
+
       const formData = new FormData();
       formData.append("audio", renderedAudio);
       const response = await axios.post(ADD_AUDIO_MESSAGE_ROUTE, formData, {
@@ -157,7 +170,7 @@ function CaptureAudio({hide}) {
         },
       });
       if(response.status === 201) {
-        socket.current.emit("send-msg", {
+        socket.current?.emit("send-msg", {
           to: currentChatUser?.id,
           from:userInfo?.id,
           message: response.data.message,
@@ -170,7 +183,7 @@ function CaptureAudio({hide}) {
           fromSelf: true,
         });
       }
-      hide()
+      hide(false)
     } catch(err){
       console.log(err)
     }

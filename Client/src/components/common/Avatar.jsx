@@ -7,6 +7,7 @@ import PhotoLibrary from "./PhotoLibrary";
 import PhotoPicker from "./PhotoPicker";
 
 function Avatar({type,image, setImage}) {
+  const imageSrc = image || "/default_avatar.png";
   const [hover, setHover] = useState(false);
   const [isContextMenuVisible, setIsContextMenuVisible] = useState(false);
   const [contextMenuCordinates, setContextMenuCordinates] = useState({
@@ -85,13 +86,13 @@ function Avatar({type,image, setImage}) {
       {
         type ==="sm" && (
           <div className="relative h-10 w-10">
-        <Image src={image} alt="avatar" className="rounded-full" fill />
+        <Image src={imageSrc} alt="avatar" className="rounded-full" fill sizes="40px" />
           </div>
       )}
       {
         type ==="lg" && (
           <div className="relative h-14 w-14">
-        <Image src={image} alt="avatar" className="rounded-full" fill />
+        <Image src={imageSrc} alt="avatar" className="rounded-full" fill sizes="56px" />
           </div>
       )}
       {
@@ -117,7 +118,7 @@ function Avatar({type,image, setImage}) {
               >Altere sua foto de perfil</span>
             </div>
             <div className="flex items-center justify-center h-60 w-60">
-            <Image src={image} alt="avatar" className="rounded-full" fill />
+            <Image src={imageSrc} alt="avatar" className="rounded-full" fill sizes="240px" />
             </div>
           </div>
       )}

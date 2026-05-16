@@ -30,11 +30,15 @@ export const DEMO_CONTACTS = [
   },
 ];
 
-export const DEMO_CONTACT_GROUPS = DEMO_CONTACTS.reduce((groups, contact) => {
+const DEMO_MESSAGES_STORAGE_KEY = "projectchat.demo.messages";
+
+export const groupContacts = (contacts) => contacts.reduce((groups, contact) => {
   const initial = contact.name.charAt(0).toUpperCase();
   groups[initial] = [...(groups[initial] || []), contact];
   return groups;
 }, {});
+
+export const DEMO_CONTACT_GROUPS = groupContacts(DEMO_CONTACTS);
 
 export const getDemoMessages = (contactId) => [
   {
@@ -56,3 +60,60 @@ export const getDemoMessages = (contactId) => [
     createdAt: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
   },
 ];
+
+const readDemoMessageStore = () => {
+  if (typeof window === "undefined") return {};
+
+  try {
+    return JSON.parse(localStorage.getItem(DEMO_MESSAGES_STORAGE_KEY)) || {};
+  } catch {
+    localStorage.removeItem(DEMO_MESSAGES_STORAGE_KEY);
+    return {};
+  }
+};
+
+const writeDemoMessageStore = (store) => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(DEMO_MESSAGES_STORAGE_KEY, JSON.stringify(store));
+};
+
+export const getDemoConversation = (contactId) => {
+  const key = String(contactId);
+  const store = readDemoMessageStore();
+
+  if (!store[key]) {
+    store[key] = getDemoMessages(contactId);
+    writeDemoMessageStore(store);
+  }
+
+  return store[key];
+};
+
+export const saveDemoConversation = (contactId, messages) => {
+  const store = readDemoMessageStore();
+  store[String(contactId)] = messages;
+  writeDemoMessageStore(store);
+};
+
+export const createDemoMessage = ({ contactId, type, message }) => ({
+  id: `${contactId}-${Date.now()}`,
+  senderId: DEMO_USER.id,
+  recieverId: contactId,
+  type,
+  message,
+  messageStatus: "sent",
+  createdAt: new Date().toISOString(),
+});
+
+export const addDemoMessage = (contactId, message) => {
+  const messages = [...getDemoConversation(contactId), message];
+  saveDemoConversation(contactId, messages);
+  return messages;
+};
+
+export const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});

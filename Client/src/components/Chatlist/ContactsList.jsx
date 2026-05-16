@@ -10,7 +10,20 @@ import ChatLIstItem from "./ChatLIstItem";
 
 function ContactsList() {
   const [allContacts, setAllContacts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [{}, dispatch] = useStateProvider();
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const visibleContacts = Object.entries(allContacts).reduce((groups, [initialLetter, userList]) => {
+    const contacts = normalizedSearch
+      ? userList.filter((contact) => (
+        contact.name.toLowerCase().includes(normalizedSearch) ||
+        contact.about.toLowerCase().includes(normalizedSearch)
+      ))
+      : userList;
+
+    if (contacts.length) groups[initialLetter] = contacts;
+    return groups;
+  }, {});
 
   useEffect(() => {
     if (IS_DEMO_MODE) {
@@ -52,12 +65,18 @@ function ContactsList() {
             />
           </div>
           <div>
-            <input type="text"  placeholder="Pesquisar contatos" className="bg-transparent text-sm focus:outline-none text-white w-full pr-64" />
+            <input
+            type="text"
+            placeholder="Pesquisar contatos"
+            className="bg-transparent text-sm focus:outline-none text-white w-full pr-64"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            />
           </div>
         </div>
       </div>
       {
-        Object.entries(allContacts).map(([initialLetter, userList]) => {
+        Object.entries(visibleContacts).map(([initialLetter, userList]) => {
           return (
             <div key={Date.now()+initialLetter}>
               <div className="text-teal-light pl-10 py-5">{initialLetter}</div>

@@ -8,7 +8,7 @@ The public demo runs in safe demo mode on Vercel:
 
 https://projectchat-demo.vercel.app
 
-Demo mode uses mock contacts and browser-only messages. It does not ask for Google login, does not connect to the Express backend, and does not store private user data.
+Demo mode uses mock contacts and browser-only messages stored in the visitor's own browser. It does not ask for Google login, does not connect to the Express backend, and does not store private user data on a server.
 
 ## What is included
 
@@ -96,7 +96,7 @@ The project uses `Client/vercel.json` to force the Next.js preset and `npm ci`. 
 
 ## Privacy and production notes
 
-- The Vercel demo is intentionally non-persistent and uses mock data only.
+- The Vercel demo uses mock data and persists demo messages only in the visitor's local browser storage.
 - The backend currently uses local SQLite and local upload folders, which are not suitable for serverless production hosting.
 - For a real public production chat, move the backend to a persistent runtime such as Cloud Run, Fly.io, Render, Railway, or a VM.
 - Replace SQLite with a managed database such as Postgres.
@@ -107,5 +107,5 @@ The project uses `Client/vercel.json` to force the Next.js preset and `npm ci`. 
 ## Current limitations
 
 - The Vercel link is a safe frontend demo, not a full multi-user real-time backend deployment.
-- Demo messages are held in the browser session and reset on refresh or when switching contacts.
-- Calls, audio uploads, and image uploads require the real backend/storage path before production use.
+- Demo messages, image attachments, and audio messages are local to each browser.
+- Calls require the real-time backend/WebRTC path before production use.
