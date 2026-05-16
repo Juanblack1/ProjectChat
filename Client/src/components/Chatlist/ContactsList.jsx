@@ -1,6 +1,8 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { GET_ALL_CONTACTS } from "@/utils/ApiRoutes";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
+import { DEMO_CONTACT_GROUPS } from "@/utils/DemoData";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { BiArrowBack, BiSearchAlt2 } from "react-icons/bi";
@@ -11,6 +13,11 @@ function ContactsList() {
   const [{}, dispatch] = useStateProvider();
 
   useEffect(() => {
+    if (IS_DEMO_MODE) {
+      setAllContacts(DEMO_CONTACT_GROUPS);
+      return;
+    }
+
     const getContacts = async () => {
     try{
         const {
@@ -58,7 +65,7 @@ function ContactsList() {
                 userList.map((contact) => {
                   return (<ChatLIstItem
                   data={contact}
-                  isContactPage={true}
+                  isContactsPage={true}
                   key={contact.id}
                   />)
                 })

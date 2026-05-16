@@ -1,6 +1,8 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { CHECK_USER_ROUTE, GET_MESSAGE_ROUTE, HOST } from "@/utils/ApiRoutes";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
+import { DEMO_USER, getDemoMessages } from "@/utils/DemoData";
 import { firebaseAuth } from "@/utils/FirebaseConfig";
 import axios from "axios";
 import { onAuthStateChanged } from "firebase/auth";
@@ -23,31 +25,47 @@ function Main() {
     if(redirectLogin) router.push("/login")
   }, [redirectLogin])
 
-  onAuthStateChanged(firebaseAuth, async(currentUser)=> {
-    if(!currentUser) setRedirectLogin(true)
-    if(!userInfo && currentUser?.email){
-      const {data} = await axios.post(CHECK_USER_ROUTE, {
-        email:currentUser.email
-      })
-      if(data?.data){
-        if(!data.status) {
-          router.push("/login")
-        }
-        else {
-          const {id,name,email,profilePicture:profileImage, status} = data.data;
-          dispatch({
-            type:reducerCases.SET_USER_INFO,
-            userInfo:{
-              id, name, email, profileImage, status
-            }
-          })
+  useEffect(() => {
+    if (IS_DEMO_MODE) {
+      if (!userInfo) {
+        dispatch({ type: reducerCases.SET_USER_INFO, userInfo: DEMO_USER });
+      }
+      return;
+    }
+
+    if (!firebaseAuth) {
+      setRedirectLogin(true);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async(currentUser)=> {
+      if(!currentUser) setRedirectLogin(true)
+      if(!userInfo && currentUser?.email){
+        const {data} = await axios.post(CHECK_USER_ROUTE, {
+          email:currentUser.email
+        })
+        if(data?.data){
+          if(!data.status) {
+            router.push("/login")
+          }
+          else {
+            const {id,name,email,profilePicture:profileImage, status} = data.data;
+            dispatch({
+              type:reducerCases.SET_USER_INFO,
+              userInfo:{
+                id, name, email, profileImage, status
+              }
+            })
+          }
         }
       }
-    }
-  })
+    })
+
+    return unsubscribe;
+  }, [dispatch, router, userInfo]);
 
   useEffect(() => {
-    if(userInfo) {
+    if(userInfo && !IS_DEMO_MODE) {
       socket.current = io(HOST);
       socket.current.emit("add-user", userInfo.id);
       dispatch({type:reducerCases.SET_SOCKET, socket})
@@ -70,6 +88,13 @@ function Main() {
 
   useEffect(() => {
     const getMessages = async () => {
+      if (IS_DEMO_MODE) {
+        dispatch({
+          type: reducerCases.SET_MESSAGES,
+          messages: getDemoMessages(currentChatUser.id),
+        });
+        return;
+      }
       const {data:{messages}} = await axios.get(`${GET_MESSAGE_ROUTE}/${userInfo.id}/${currentChatUser.id}`)
       dispatch({
         type:reducerCases.SET_MESSAGES, messages

@@ -1,5 +1,6 @@
 import Avatar from "@/components/common/Avatar";
 import Input from "@/components/common/Input";
+import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { ONBOARD_USER_ROUTE } from "@/utils/ApiRoutes";
 import axios from "axios";
@@ -20,7 +21,7 @@ function onboarding() {
   }, [newUser, userInfo, router])
 
   const onboarUserHandler = async () => {
-      if(validateDetails){
+      if(validateDetails()){
         const email = userInfo.email;
         try {
           const {data} = await axios.post(ONBOARD_USER_ROUTE, {
@@ -38,7 +39,7 @@ function onboarding() {
             dispatch({
               type:reducerCases.SET_USER_INFO,
               userInfo:{
-                id: data.user.id,
+                id: data.data.id,
                 name,
                 email,
                 profileImage : image,

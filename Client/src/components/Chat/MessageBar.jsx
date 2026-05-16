@@ -1,6 +1,7 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { ADD_IMAGE_MESSAGE_ROUTE, ADD_MESSAGE_ROUTE } from "@/utils/ApiRoutes";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import axios from "axios";
 import EmojiPicker from "emoji-picker-react";
 import dynamic from "next/dynamic";
@@ -30,7 +31,7 @@ function MessageBar() {
         }
       }
     }
-    document,addEventListener("click", handleOutsideClick);
+    document.addEventListener("click", handleOutsideClick);
     return () => {
       document.removeEventListener("click", handleOutsideClick);
     }
@@ -58,12 +59,29 @@ function MessageBar() {
 
   const sendMessage = async() => {
     try {
+      if (IS_DEMO_MODE) {
+        dispatch({
+          type: reducerCases.ADD_MESSAGE,
+          newMessage: {
+            id: Date.now(),
+            senderId: userInfo.id,
+            recieverId: currentChatUser.id,
+            type: "text",
+            message,
+            messageStatus: "sent",
+            createdAt: new Date().toISOString(),
+          },
+        });
+        setMessage("")
+        return;
+      }
+
       const {data} = await axios.post(ADD_MESSAGE_ROUTE, {
         to: currentChatUser?.id,
         from:userInfo?.id,
         message
       });
-      socket.current.emit("send-msg", {
+      socket.current?.emit("send-msg", {
         to: currentChatUser?.id,
         from:userInfo?.id,
         message: data.message,

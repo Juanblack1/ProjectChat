@@ -12,9 +12,9 @@ function ChatList() {
   useEffect(() => {
     if(contactsPage) {
       setPageType("all-contacts");
-    } else [
+    } else {
       setPageType("default")
-    ]
+    }
   }, [contactsPage])
 
   return (

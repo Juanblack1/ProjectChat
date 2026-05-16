@@ -1,7 +1,9 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { CHECK_USER_ROUTE } from "@/utils/ApiRoutes";
-import { firebaseAuth } from "@/utils/FirebaseConfig";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
+import { DEMO_USER } from "@/utils/DemoData";
+import { firebaseAuth, isFirebaseConfigured } from "@/utils/FirebaseConfig";
 import axios from "axios";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Image from "next/image";
@@ -19,6 +21,24 @@ function login() {
   }, [userInfo, newUser])
 
   const handleLogin = async () => {
+    if (IS_DEMO_MODE) {
+      dispatch({
+        type: reducerCases.SET_USER_INFO,
+        userInfo: DEMO_USER,
+      });
+      dispatch({
+        type: reducerCases.SET_NEW_USER,
+        newUser: false,
+      });
+      router.push("/");
+      return;
+    }
+
+    if (!isFirebaseConfigured) {
+      console.error("Firebase config is missing. Set NEXT_PUBLIC_FIREBASE_* variables or enable demo mode.");
+      return;
+    }
+
     const provider = new GoogleAuthProvider()
     const {user:{displayName:name,email, photoURL:profileImage}} = await signInWithPopup(firebaseAuth, provider);
     try {
@@ -64,7 +84,7 @@ function login() {
     </div>
     <button className="flex items-center justify-center gap-7 bg-search-input-container-background p-5 rounded-lg" onClick={handleLogin}>
       <FcGoogle className="text-4xl"/>
-      <span className="text-white text-2l">Login with Google</span>
+        <span className="text-white text-2l">{IS_DEMO_MODE ? "Entrar no demo" : "Login with Google"}</span>
     </button>
   </div>
 );

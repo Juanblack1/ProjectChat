@@ -44,7 +44,7 @@ function Avatar({type,image, setImage}) {
           setGrabPhoto(false)
       }
     }
-    document,addEventListener("click", handleOutsideClickPhoto);
+    document.addEventListener("click", handleOutsideClickPhoto);
     return () => {
       document.removeEventListener("click", handleOutsideClickPhoto);
     }
