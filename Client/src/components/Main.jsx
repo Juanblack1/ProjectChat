@@ -2,7 +2,7 @@ import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { CHECK_USER_ROUTE, GET_MESSAGE_ROUTE, HOST } from "@/utils/ApiRoutes";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
-import { DEMO_USER, getDemoConversation } from "@/utils/DemoData";
+import { getDemoConversation, getDemoProfile, hasDemoSession } from "@/utils/DemoData";
 import { firebaseAuth } from "@/utils/FirebaseConfig";
 import axios from "axios";
 import { onAuthStateChanged } from "firebase/auth";
@@ -27,8 +27,13 @@ function Main() {
 
   useEffect(() => {
     if (IS_DEMO_MODE) {
+      if (!hasDemoSession()) {
+        setRedirectLogin(true);
+        return;
+      }
+
       if (!userInfo) {
-        dispatch({ type: reducerCases.SET_USER_INFO, userInfo: DEMO_USER });
+        dispatch({ type: reducerCases.SET_USER_INFO, userInfo: getDemoProfile() });
       }
       return;
     }

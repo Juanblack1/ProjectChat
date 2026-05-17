@@ -1,6 +1,6 @@
 import { useStateProvider } from "@/context/StateContext";
 import { reducerCases } from "@/context/constants";
-import { clearDemoData } from "@/utils/DemoData";
+import { clearDemoData, endDemoSession } from "@/utils/DemoData";
 import { firebaseAuth } from "@/utils/FirebaseConfig";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/router";
@@ -13,6 +13,7 @@ function Logout() {
   useEffect(() => {
     const logout = async () => {
       clearDemoData();
+      endDemoSession();
 
       if (firebaseAuth) {
         await signOut(firebaseAuth);

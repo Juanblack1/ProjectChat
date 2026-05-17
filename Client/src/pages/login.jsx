@@ -2,7 +2,7 @@ import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { CHECK_USER_ROUTE } from "@/utils/ApiRoutes";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
-import { DEMO_USER } from "@/utils/DemoData";
+import { hasDemoSession, startDemoSession } from "@/utils/DemoData";
 import { firebaseAuth, isFirebaseConfigured } from "@/utils/FirebaseConfig";
 import axios from "axios";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -17,14 +17,22 @@ function login() {
   const [{userInfo, newUser}, dispatch] = useStateProvider();
 
   useEffect(() => {
+    if (IS_DEMO_MODE) {
+      if (hasDemoSession()) {
+        router.replace("/");
+      }
+      return;
+    }
+
     if(userInfo?.id && !newUser) router.push("/")
-  }, [userInfo, newUser])
+  }, [dispatch, router, userInfo, newUser])
 
   const handleLogin = async () => {
     if (IS_DEMO_MODE) {
+      const demoProfile = startDemoSession();
       dispatch({
         type: reducerCases.SET_USER_INFO,
-        userInfo: DEMO_USER,
+        userInfo: demoProfile,
       });
       dispatch({
         type: reducerCases.SET_NEW_USER,

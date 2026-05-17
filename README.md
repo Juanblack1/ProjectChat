@@ -10,7 +10,7 @@ https://projectchat-demo.vercel.app
 
 Demo mode uses mock contacts and browser-only messages stored in the visitor's own browser. It does not ask for Google login, does not connect to the Express backend, and does not store private user data on a server.
 
-The demo supports local text messages, contact search, message search, image attachments, audio recording, chat clearing, and logout/reset. Voice/video call buttons open demo call screens because the production WebRTC/signaling flow still requires a real backend.
+The demo supports explicit demo login, local profile editing, local text messages, contact search, message search, image attachments, audio recording, chat clearing, and logout/reset. Voice/video call buttons open demo call screens because the production WebRTC/signaling flow still requires a real backend.
 
 ## What is included
 
@@ -98,7 +98,7 @@ The project uses `Client/vercel.json` to force the Next.js preset and `npm ci`. 
 
 ## Privacy and production notes
 
-- The Vercel demo uses mock data and persists demo messages only in the visitor's local browser storage.
+- The Vercel demo uses mock data and persists the demo session, profile, and messages only in the visitor's local browser storage.
 - The backend currently uses local SQLite and local upload folders, which are not suitable for serverless production hosting.
 - For a real public production chat, move the backend to a persistent runtime such as Cloud Run, Fly.io, Render, Railway, or a VM.
 - Replace SQLite with a managed database such as Postgres.

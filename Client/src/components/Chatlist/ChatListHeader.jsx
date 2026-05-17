@@ -1,16 +1,18 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
-import { clearDemoData } from "@/utils/DemoData";
+import { clearDemoData, endDemoSession, getDemoConversation, getDemoProfile } from "@/utils/DemoData";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { BsFillChatLeftTextFill, BsThreeDotsVertical } from "react-icons/bs";
 import Avatar from "../common/Avatar";
 import ContextMenu from "../common/ContextMenu";
+import ProfileSettings from "./ProfileSettings";
 
 function ChatListHeader() {
-  const [{userInfo}, dispatch] = useStateProvider();
+  const [{userInfo, currentChatUser}, dispatch] = useStateProvider();
   const router = useRouter();
   const [isContextMenuVisible, setIsContextMenuVisible] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [contextMenuCordinates, setContextMenuCordinates] = useState({x: 0, y: 0});
 
   const handleAllContactsPage = () => {
@@ -27,20 +29,31 @@ function ChatListHeader() {
 
   const logout = () => {
     clearDemoData();
-    dispatch({type: reducerCases.SET_USER_INFO, userInfo: undefined});
-    dispatch({type: reducerCases.SET_MESSAGES, messages: []});
-    router.push("/login");
+    endDemoSession();
+    router.replace("/login").then(() => {
+      dispatch({type: reducerCases.SET_USER_INFO, userInfo: undefined});
+      dispatch({type: reducerCases.SET_MESSAGES, messages: []});
+    });
+  };
+
+  const resetDemo = () => {
+    clearDemoData();
+    dispatch({type: reducerCases.SET_USER_INFO, userInfo: getDemoProfile()});
+    dispatch({
+      type: reducerCases.SET_MESSAGES,
+      messages: currentChatUser ? getDemoConversation(currentChatUser.id) : [],
+    });
   };
 
   const menuOptions = [
     {name: "Sair da demo", callback: logout},
-    {name: "Resetar demo", callback: clearDemoData},
+    {name: "Resetar demo", callback: resetDemo},
   ];
 
   return( 
   <>
   <div className="h-16 px-4 py-3 flex justify-between items-center">
-    <div className="cursor-pointer">
+    <div className="cursor-pointer" title="Meu perfil" onClick={() => setIsProfileOpen(true)}>
       <Avatar type="sm" image={userInfo?.profileImage} />
     </div>
     <div className="flex gap-6">
@@ -65,6 +78,7 @@ function ChatListHeader() {
     contextMenu={isContextMenuVisible}
     setContextMenu={setIsContextMenuVisible}
   />}
+  {isProfileOpen && <ProfileSettings onClose={() => setIsProfileOpen(false)} />}
   </>
   );
 }

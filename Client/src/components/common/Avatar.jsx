@@ -106,16 +106,16 @@ function Avatar({type,image, setImage}) {
             {canEdit && <div className={`z-10 bg-photopicker-overlay-background h-60 w-60 absolute top-0 left-0 flex items-center rounded-full justify-center flex-col text-center gap-2
               ${hover?"visible": "hidden"}
               `}
-              if="context-opener"
+              id="context-opener"
               onClick={e=>showContextMenu(e)}
               >
               <FaCamera 
                 className="text-2xl" 
-                if="context-opener"
+                id="context-opener"
                 onClick={e=>showContextMenu(e)}
               />
               <span
-              if="context-opener"
+              id="context-opener"
               onClick={e=>showContextMenu(e)}
               >Altere sua foto de perfil</span>
             </div>}

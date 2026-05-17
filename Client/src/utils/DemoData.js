@@ -31,6 +31,43 @@ export const DEMO_CONTACTS = [
 ];
 
 const DEMO_MESSAGES_STORAGE_KEY = "projectchat.demo.messages";
+const DEMO_PROFILE_STORAGE_KEY = "projectchat.demo.profile";
+const DEMO_SESSION_STORAGE_KEY = "projectchat.demo.session";
+
+export const hasDemoSession = () => (
+  typeof window !== "undefined" && localStorage.getItem(DEMO_SESSION_STORAGE_KEY) === "active"
+);
+
+export const getDemoProfile = () => {
+  if (typeof window === "undefined") return DEMO_USER;
+
+  try {
+    const profile = JSON.parse(localStorage.getItem(DEMO_PROFILE_STORAGE_KEY));
+    return profile ? {...DEMO_USER, ...profile, id: DEMO_USER.id} : DEMO_USER;
+  } catch {
+    localStorage.removeItem(DEMO_PROFILE_STORAGE_KEY);
+    return DEMO_USER;
+  }
+};
+
+export const saveDemoProfile = (profile) => {
+  if (typeof window === "undefined") return DEMO_USER;
+
+  const nextProfile = {...DEMO_USER, ...profile, id: DEMO_USER.id};
+  localStorage.setItem(DEMO_PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+  return nextProfile;
+};
+
+export const startDemoSession = () => {
+  if (typeof window === "undefined") return DEMO_USER;
+  localStorage.setItem(DEMO_SESSION_STORAGE_KEY, "active");
+  return getDemoProfile();
+};
+
+export const endDemoSession = () => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(DEMO_SESSION_STORAGE_KEY);
+};
 
 export const groupContacts = (contacts) => contacts.reduce((groups, contact) => {
   const initial = contact.name.charAt(0).toUpperCase();
@@ -121,4 +158,5 @@ export const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
 export const clearDemoData = () => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(DEMO_MESSAGES_STORAGE_KEY);
+  localStorage.removeItem(DEMO_PROFILE_STORAGE_KEY);
 };
