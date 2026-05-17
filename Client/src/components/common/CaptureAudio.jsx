@@ -21,6 +21,7 @@ function CaptureAudio({hide}) {
   const [totalDuration, setTotalDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [renderedAudio, setRenderedAudio] = useState(null);
+  const [recordingError, setRecordingError] = useState("");
   
 
   const audioRef = useRef();
@@ -101,6 +102,7 @@ function CaptureAudio({hide}) {
     setRecordingDuration(0);
     setCurrentPlaybackTime(0);
     setTotalDuration(0);
+    setRecordingError("");
     setIsRecording(true);
     navigator.mediaDevices.getUserMedia({audio:true}).then((stream) => {
       const mediaRecorder = new MediaRecorder(stream);
@@ -125,6 +127,7 @@ function CaptureAudio({hide}) {
       mediaRecorder.start();
     }).catch((error) => {
       console.log("Error accessing microphone:", error);
+      setRecordingError("Permita o uso do microfone para gravar audio.");
       setIsRecording(false);
     });
   };
@@ -235,6 +238,9 @@ function CaptureAudio({hide}) {
       )}
       {
         recordedAudio && !isPlaying && (<span>{formatTime(totalDuration)}</span>)
+      }
+      {
+        recordingError && <span className="text-sm text-red-400">{recordingError}</span>
       }
       <audio ref={audioRef} hidden />
       </div>

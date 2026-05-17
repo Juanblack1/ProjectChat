@@ -30,7 +30,7 @@ function ContextMenu({options,cordinates,contextMenu,setContextMenu}) {
   }
   return ( 
   <div 
-  className={`bg-dropdown-background fixed py-2 z-[100] shadow-xl`}
+  className={`bg-dropdown-background fixed py-2 z-[1000] shadow-xl`}
   ref={contextMenuRef}
   style={{
     top:cordinates.y,

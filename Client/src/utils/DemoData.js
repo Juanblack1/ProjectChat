@@ -117,3 +117,8 @@ export const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
   reader.onerror = reject;
   reader.readAsDataURL(file);
 });
+
+export const clearDemoData = () => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(DEMO_MESSAGES_STORAGE_KEY);
+};

@@ -12,16 +12,17 @@ function SearchMessages() {
 
 
   useEffect(() => {
-    if(searchTerm) {
-      // Filtra as mensagens e atualiza o estado correto
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    if(normalizedSearch) {
       const filteredMessages = messages.filter(
-        message => message.type === "text" && message.message.includes(searchTerm)
+        message => message.type === "text" && message.message.toLowerCase().includes(normalizedSearch)
       );
       setSearchedMessages(filteredMessages);
     } else {
       setSearchedMessages([]);
     }
-  }, [searchTerm]);
+  }, [messages, searchTerm]);
 
   return (
   <div className="border-conversation-border border-1 w-full bg-conversation-panel-background flex flex-col z-10 max-h-screen">
@@ -58,7 +59,7 @@ function SearchMessages() {
         {
           searchTerm.length > 0 && !searchedMessages.length && (
           <span className="text-secondary w-full flex justify-center">
-            Messagem não encontrada
+            Mensagem não encontrada
           </span>
           )
         }
@@ -66,7 +67,7 @@ function SearchMessages() {
         className="flex flex-col w-full h-full"
         >
           {
-            searchedMessages.map((message) => (<div className="flex cursor-pointer flex-col justify-center hover:bg-background-default-hover w-full px-5 border-b-[0.1px] border-secondary py-5">
+            searchedMessages.map((message) => (<div key={message.id} className="flex cursor-pointer flex-col justify-center hover:bg-background-default-hover w-full px-5 border-b-[0.1px] border-secondary py-5">
               <div className="text-sm text-secondary">
                 {calculateTime(message.createdAt)}
                 </div>

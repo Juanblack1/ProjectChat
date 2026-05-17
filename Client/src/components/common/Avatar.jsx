@@ -8,6 +8,7 @@ import PhotoPicker from "./PhotoPicker";
 
 function Avatar({type,image, setImage}) {
   const imageSrc = image || "/default_avatar.png";
+  const canEdit = typeof setImage === "function";
   const [hover, setHover] = useState(false);
   const [isContextMenuVisible, setIsContextMenuVisible] = useState(false);
   const [contextMenuCordinates, setContextMenuCordinates] = useState({
@@ -19,6 +20,7 @@ function Avatar({type,image, setImage}) {
   const [showCapturePhoto, setShowCapturePhoto] = useState(false)
 
   const showContextMenu = (e) => {
+    if (!canEdit) return;
     e.preventDefault();
     setIsContextMenuVisible(true);
     setContextMenuCordinates({
@@ -101,7 +103,7 @@ function Avatar({type,image, setImage}) {
           onMouseEnter={()=>setHover(true)}
           onMouseLeave={()=>setHover(false)}
           >
-            <div className={`z-10 bg-photopicker-overlay-background h-60 w-60 absolute top-0 left-0 flex items-center rounded-full justify-center flex-col text-center gap-2
+            {canEdit && <div className={`z-10 bg-photopicker-overlay-background h-60 w-60 absolute top-0 left-0 flex items-center rounded-full justify-center flex-col text-center gap-2
               ${hover?"visible": "hidden"}
               `}
               if="context-opener"
@@ -116,24 +118,24 @@ function Avatar({type,image, setImage}) {
               if="context-opener"
               onClick={e=>showContextMenu(e)}
               >Altere sua foto de perfil</span>
-            </div>
-            <div className="flex items-center justify-center h-60 w-60">
+            </div>}
+            <div className="relative flex items-center justify-center h-60 w-60">
             <Image src={imageSrc} alt="avatar" className="rounded-full" fill sizes="240px" />
             </div>
           </div>
       )}
     </div>
     {
-      isContextMenuVisible && <ContextMenu 
+      canEdit && isContextMenuVisible && <ContextMenu
       options={contextMenuOptions}
       cordinates={contextMenuCordinates}
       contextMenu={isContextMenuVisible}
       setContextMenu={setIsContextMenuVisible}
       />
     }
-    {showCapturePhoto && <CapturePhoto setImage={setImage} hide={setShowCapturePhoto} />}
-    {showPhotoLibrary && <PhotoLibrary setImage={setImage} hidePhotoLibrary={setShowPhotoLibrary} />}
-    {grabPhoto && <PhotoPicker onChange={photoPickerChange} />}
+    {canEdit && showCapturePhoto && <CapturePhoto setImage={setImage} hide={setShowCapturePhoto} />}
+    {canEdit && showPhotoLibrary && <PhotoLibrary setImage={setImage} hidePhotoLibrary={setShowPhotoLibrary} />}
+    {canEdit && grabPhoto && <PhotoPicker onChange={photoPickerChange} />}
   </>
   );
 }
