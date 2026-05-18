@@ -7,12 +7,11 @@ export default function App({ Component, pageProps }) {
   return (
     <StateProvider initialState={initialState} reducer={reducer}>
       <Head>
-      <title>
-        Whatsapp
-      </title>
-      <link rel="shortcut icon" href="/favicon.png"/>
+        <title>ProjectChat Web</title>
+        <meta name="description" content="ProjectChat public demo" />
+        <link rel="shortcut icon" href="/favicon.png"/>
       </Head>
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </StateProvider>
   )
   

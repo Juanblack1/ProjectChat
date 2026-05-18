@@ -8,6 +8,7 @@ export const initialState= {
     messages: [],
     messagesSearch:false,
     contactSearch:"",
+    contactFilter:"all",
 };
 
 const reducer = (state,action) => {
@@ -57,6 +58,11 @@ const reducer = (state,action) => {
             return {
                 ...state,
                 contactSearch:action.contactSearch,
+            }
+        case reducerCases.SET_CONTACT_FILTER:
+            return {
+                ...state,
+                contactFilter:action.contactFilter,
             }
         default:
             return state;

@@ -24,10 +24,13 @@ function ProfileSettings({onClose}) {
   };
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black/70 flex items-center justify-center text-white">
-      <div className="bg-panel-header-background rounded-2xl w-[420px] max-w-[92vw] p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[300] bg-black/75 backdrop-blur-sm flex items-center justify-center text-white">
+      <div className="bg-panel-header-background rounded-3xl w-[440px] max-w-[92vw] p-6 shadow-2xl border border-conversation-border">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold">Meu perfil</h2>
+          <div>
+            <h2 className="text-2xl font-semibold">Meu perfil</h2>
+            <p className="text-secondary text-sm mt-1">Personalize a identidade usada nesta demo.</p>
+          </div>
           <IoClose className="text-3xl cursor-pointer text-icon-lighter" onClick={onClose} />
         </div>
 
@@ -37,7 +40,7 @@ function ProfileSettings({onClose}) {
 
         <label className="text-teal-light text-sm">Nome</label>
         <input
-          className="bg-input-background text-white h-11 rounded-lg px-4 w-full mt-2 mb-5 focus:outline-none"
+          className="bg-input-background text-white h-11 rounded-lg px-4 w-full mt-2 mb-5 focus:outline-none focus:ring-1 focus:ring-icon-green/60"
           value={name}
           onChange={(event) => setName(event.target.value)}
           maxLength={40}
@@ -45,14 +48,14 @@ function ProfileSettings({onClose}) {
 
         <label className="text-teal-light text-sm">Recado</label>
         <input
-          className="bg-input-background text-white h-11 rounded-lg px-4 w-full mt-2 mb-6 focus:outline-none"
+          className="bg-input-background text-white h-11 rounded-lg px-4 w-full mt-2 mb-6 focus:outline-none focus:ring-1 focus:ring-icon-green/60"
           value={status}
           onChange={(event) => setStatus(event.target.value)}
           maxLength={80}
         />
 
         <button
-          className="bg-icon-green hover:bg-teal-light text-black font-semibold rounded-lg w-full py-3"
+          className="bg-icon-green hover:bg-teal-light text-black font-semibold rounded-lg w-full py-3 transition-colors"
           onClick={saveProfile}
         >
           Salvar perfil

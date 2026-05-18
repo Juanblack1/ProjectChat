@@ -10,7 +10,7 @@ https://projectchat-demo.vercel.app
 
 Demo mode uses mock contacts and browser-only messages stored in the visitor's own browser. It does not ask for Google login, does not connect to the Express backend, and does not store private user data on a server.
 
-The demo supports explicit demo login, local profile editing, local text messages, contact search, message search, image attachments, audio recording, chat clearing, and logout/reset. Voice/video call buttons open demo call screens because the production WebRTC/signaling flow still requires a real backend.
+The demo supports explicit demo login, a realistic populated chat workspace, local profile editing, conversation filters, local text messages, contact search, message search, image attachments, audio recording, chat clearing, and logout/reset. Voice/video call buttons open demo call screens because the production WebRTC/signaling flow still requires a real backend.
 
 ## What is included
 

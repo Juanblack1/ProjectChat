@@ -10,13 +10,13 @@ function ImageMessage({ message }) {
   const imageUrl = getAssetUrl(message.message, HOST);
 
   return( 
-  <div className={`p-1 rounded-lg ${message.senderId === currentChatUser.id ? "bg-incoming-background": "bg-outgoing-background"}`}>
+  <div className={`p-1.5 rounded-lg shadow-md ${message.senderId === currentChatUser.id ? "bg-incoming-background rounded-tl-sm": "bg-outgoing-background rounded-tr-sm"}`}>
     <div className="relative">
       {imageUrl.startsWith("data:") ? (
-        <img src={imageUrl} className="rounded-lg max-h-[300px] max-w-[300px]" alt="asset" />
+        <img src={imageUrl} className="rounded-lg max-h-[320px] max-w-[320px] object-cover" alt="asset" />
       ) : (
         <Image src={imageUrl}
-        className="rounded-lg"
+        className="rounded-lg object-cover"
         alt="asset"
         height={300}
         width={300}

@@ -28,7 +28,7 @@ module.exports = {
         "icon-ack": "#53bdeb",
       },
       gridTemplateColumns: {
-        main: "1fr 2.4fr",
+        main: "minmax(340px, 31vw) minmax(0, 1fr)",
       },
     },
   },

@@ -45,41 +45,38 @@ function ContactsList() {
   }, [])
 
   return (
-  <div className="h-full flex flex-col">
-    <div className="h-24 flex items-end px-3 py-4">
-      <div className="flex items-center gap-12 text-white">
+  <div className="h-full flex flex-col bg-search-input-container-background">
+    <div className="h-24 flex items-end px-4 py-4 bg-panel-header-background border-b border-conversation-border">
+      <div className="flex items-center gap-8 text-white">
         <BiArrowBack
-        className="cursor-pointer text-xl"
+        className="cursor-pointer text-2xl text-panel-header-icon hover:text-primary-strong"
         onClick={() => dispatch({ type: reducerCases.SET_ALL_CONTACTS_PAGE})
       }
         />
-        <span>New Chat</span>
+        <div>
+          <div className="text-lg font-semibold">Nova conversa</div>
+          <div className="text-xs text-secondary">{Object.values(DEMO_CONTACT_GROUPS).flat().length} contatos disponiveis</div>
+        </div>
       </div>
     </div>
     <div className="bg-search-input-container-background h-full flex-auto overflow-auto custom-scrollbar">
-      <div className="flex py-3 items-center gap-3 h-14">
-        <div className="bg-panel-header-background flex items-center gap-5 px-3 py-1 rounded-lg flex-grow mx-4">
-          <div>
-            <BiSearchAlt2 
-            className="text-panel-header-icon cursor-pointer text-l"
-            />
-          </div>
-          <div>
-            <input
+      <div className="flex py-3 items-center gap-3 h-16 px-4">
+        <div className="bg-panel-header-background flex items-center gap-4 px-4 py-2 rounded-lg flex-grow">
+          <BiSearchAlt2 className="text-panel-header-icon cursor-pointer text-l" />
+          <input
             type="text"
             placeholder="Pesquisar contatos"
-            className="bg-transparent text-sm focus:outline-none text-white w-full pr-64"
+            className="bg-transparent text-sm focus:outline-none text-white w-full placeholder:text-secondary"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </div>
+          />
         </div>
       </div>
       {
         Object.entries(visibleContacts).map(([initialLetter, userList]) => {
           return (
-            <div key={Date.now()+initialLetter}>
-              <div className="text-teal-light pl-10 py-5">{initialLetter}</div>
+            <div key={initialLetter}>
+              <div className="text-teal-light pl-10 py-4 text-sm font-semibold">{initialLetter}</div>
               {
                 userList.map((contact) => {
                   return (<ChatLIstItem
@@ -92,6 +89,9 @@ function ContactsList() {
             </div>)
         })
       }
+      {Object.keys(visibleContacts).length === 0 && (
+        <div className="text-secondary text-sm px-8 py-12 text-center">Nenhum contato encontrado.</div>
+      )}
     </div>    
   </div>
   );

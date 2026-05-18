@@ -1,6 +1,6 @@
 
 function Input({name, state,setState,label=false}) {
-  return <div className="flex gap-1 flex-col"s>{
+  return <div className="flex gap-1 flex-col">{
     label && (
       <label htmlFor={name} className="text-teal-light text-lg px-1">
         {name}

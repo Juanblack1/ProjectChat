@@ -52,19 +52,23 @@ function ChatListHeader() {
 
   return( 
   <>
-  <div className="h-16 px-4 py-3 flex justify-between items-center">
-    <div className="cursor-pointer" title="Meu perfil" onClick={() => setIsProfileOpen(true)}>
+  <div className="h-[76px] px-4 py-3 flex justify-between items-center bg-panel-header-background border-b border-conversation-border">
+    <div className="flex items-center gap-3 cursor-pointer min-w-0" title="Meu perfil" onClick={() => setIsProfileOpen(true)}>
       <Avatar type="sm" image={userInfo?.profileImage} />
+      <div className="min-w-0">
+        <div className="text-primary-strong font-semibold leading-5 truncate">ProjectChat</div>
+        <div className="text-secondary text-xs truncate">{userInfo?.name || "Demo local"}</div>
+      </div>
     </div>
-    <div className="flex gap-6">
+    <div className="flex gap-5">
       <BsFillChatLeftTextFill 
-      className="text-panel-header-icon cursor-pointer text-xl"
-      title="New Chat"
+      className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
+      title="Nova conversa"
       onClick={handleAllContactsPage}
       />
       <>
       <BsThreeDotsVertical  
-      className="text-panel-header-icon cursor-pointer text-xl"
+      className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
       id="context-opener"
       title="Menu"
       onClick={showContextMenu}

@@ -18,6 +18,7 @@ function Main() {
   const router = useRouter();
   const [{userInfo, currentChatUser, messagesSearch}, dispatch] = useStateProvider()
   const [redirectLogin, setRedirectLogin] = useState(false);
+  const [demoChecked, setDemoChecked] = useState(!IS_DEMO_MODE);
   const [socketEvent, setSocketEvent] = useState(false);
   const socket = useRef();
 
@@ -35,6 +36,7 @@ function Main() {
       if (!userInfo) {
         dispatch({ type: reducerCases.SET_USER_INFO, userInfo: getDemoProfile() });
       }
+      setDemoChecked(true);
       return;
     }
 
@@ -109,21 +111,29 @@ function Main() {
       getMessages()
     }
   }, [currentChatUser])
-  
+
+  if (IS_DEMO_MODE && !demoChecked) {
+    return <div className="h-screen w-screen bg-search-input-container-background" />;
+  }
+
   return (
   <>
-  <div className="grid grid-cols-main h-screen w-screen max-h-screen max-w-full over">
-    <ChatList  />
+  <div className="grid grid-cols-1 md:grid-cols-main h-screen w-screen max-h-screen max-w-full overflow-hidden bg-search-input-container-background">
+    <div className={`${currentChatUser ? "hidden md:block" : "block"}`}>
+      <ChatList  />
+    </div>
     {
       currentChatUser ?( 
-      <div className={messagesSearch ? "grid grid-cols-2" : "grid-cols-2"}>
+      <div className={messagesSearch ? "grid grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}>
       <Chat />
       {
         messagesSearch && <SearchMessages  />
       }
       </div> 
       ): (
-      <Empty />
+      <div className="hidden md:block">
+        <Empty />
+      </div>
       )
     }
   </div>

@@ -1,38 +1,52 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
+import { getDemoConversationPreview } from "@/utils/DemoData";
 import Avatar from "../common/Avatar";
+import MessageStatus from "../common/MessageStatus";
 
 function ChatLIstItem({data, isContactsPage = false}) {
-  const[{userInfo, currentChatUser}, dispatch] = useStateProvider()
+  const[{currentChatUser}, dispatch] = useStateProvider()
+  const isActive = currentChatUser?.id === data?.id;
+  const preview = getDemoConversationPreview(data);
+  const unreadCount = isActive ? 0 : data?.unreadCount;
+  const previewTime = preview.createdAt
+    ? new Date(preview.createdAt).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"})
+    : "";
+
   const handleContactClick = () => {
-    //if(currentChatUser?.id === data?.id) {
-      dispatch({type:reducerCases.CHANGE_CURRENT_CHAT_USER,user:{...data}})
-      if (isContactsPage) {
-        dispatch({type:reducerCases.SET_ALL_CONTACTS_PAGE})
-      }
-    //}
+    dispatch({type:reducerCases.CHANGE_CURRENT_CHAT_USER,user:{...data}})
+    if (isContactsPage) {
+      dispatch({type:reducerCases.SET_ALL_CONTACTS_PAGE})
+    }
   }
+
   return( 
   <div 
-    className={` flex cursor-pointer items-center hover:bg-background-default-hover `}
+    className={`flex cursor-pointer items-center transition-colors ${isActive ? "bg-background-default-hover" : "hover:bg-background-default-hover"}`}
     onClick={handleContactClick}
   >
-    <div className="min-w-fit px-5 pt-3 pb-1">
-      <Avatar 
-        type="lg" image={data?.profilePicture}
-      />
+    <div className="min-w-fit px-4 py-3 relative">
+      <Avatar type="lg" image={data?.profilePicture} />
+      {data?.isOnline && <span className="absolute bottom-4 right-4 h-3 w-3 rounded-full bg-icon-green border-2 border-search-input-container-background" />}
     </div>
-    <div className="min-h-full flex flex-col justify-center mt-3 pr-2 w-full">
-      <div className="flex justify-between">
-        <div>
-          <span className="text-white">{data?.name}</span>
+    <div className="min-h-full flex flex-col justify-center pr-3 w-full border-b border-conversation-border py-3">
+      <div className="flex justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-primary-strong truncate">{data?.name}</span>
+          {data?.pinned && <span className="text-[10px] uppercase tracking-wide text-icon-green border border-icon-green/40 rounded-full px-1.5">Fixado</span>}
         </div>
+        <span className={`text-xs min-w-fit ${unreadCount ? "text-icon-green" : "text-secondary"}`}>{previewTime}</span>
       </div>
-      <div className="flex border-b border-conversation-border pb-2 pt-1 pe-2">
-        <div className="flex justify-between w-full">
-          <span className="text-secondary line-clamp-1 text-sm">
-            {data?.about || "\u00A0"}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-1 min-w-0">
+          {preview.fromSelf && <MessageStatus messageStatus={preview.messageStatus} />}
+          <span className={`line-clamp-1 text-sm ${unreadCount ? "text-primary-strong font-medium" : "text-secondary"}`}>
+            {data?.isTyping ? "digitando..." : preview.text || data?.about || "\u00A0"}
           </span>
+        </div>
+        <div className="flex items-center gap-2 min-w-fit">
+          {data?.muted && <span className="text-[10px] text-secondary">Sil.</span>}
+          {unreadCount > 0 && <span className="bg-icon-green text-search-input-container-background text-xs rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center font-bold">{unreadCount}</span>}
         </div>
       </div>
     </div>
