@@ -1,4 +1,5 @@
 import { useStateProvider } from "@/context/StateContext";
+import { reducerCases } from "@/context/constants";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { DEMO_CONTACTS } from "@/utils/DemoData";
 import { getContactsWithPreviews, subscribeToProfiles, subscribeToUserMessages } from "@/utils/SupabaseChat";
@@ -6,7 +7,7 @@ import { useEffect, useState } from "react";
 import ChatLIstItem from "./ChatLIstItem";
 
 function List() {
-  const [{contactSearch, contactFilter, messages, userInfo}] = useStateProvider();
+  const [{contactSearch, contactFilter, messages, userInfo, currentChatUser}, dispatch] = useStateProvider();
   const [realContacts, setRealContacts] = useState([]);
   const [error, setError] = useState("");
   const normalizedSearch = contactSearch.trim().toLowerCase();
@@ -20,6 +21,8 @@ function List() {
         const contacts = await getContactsWithPreviews(userInfo.id);
         if (active) {
           setRealContacts(contacts);
+          const activeContact = contacts.find((contact) => contact.id === currentChatUser?.id);
+          if (activeContact) dispatch({type: reducerCases.CHANGE_CURRENT_CHAT_USER, user: activeContact});
           setError("");
         }
       } catch (err) {
@@ -28,15 +31,17 @@ function List() {
     };
 
     loadContacts();
+    const presenceInterval = setInterval(loadContacts, 30000);
     const unsubscribeProfiles = subscribeToProfiles(loadContacts);
     const unsubscribeMessages = subscribeToUserMessages(userInfo.id, loadContacts);
 
     return () => {
       active = false;
+      clearInterval(presenceInterval);
       unsubscribeProfiles();
       unsubscribeMessages();
     };
-  }, [messages, userInfo?.id]);
+  }, [currentChatUser?.id, dispatch, messages, userInfo?.id]);
 
   const sourceContacts = IS_DEMO_MODE ? DEMO_CONTACTS : realContacts;
   const contacts = sourceContacts.filter((contact) => {

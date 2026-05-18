@@ -24,8 +24,8 @@ function Avatar({type,image, setImage}) {
     e.preventDefault();
     setIsContextMenuVisible(true);
     setContextMenuCordinates({
-      x:e.pageX,
-      y:e.pageY,
+      x:e.clientX,
+      y:e.clientY,
     });
   }
 

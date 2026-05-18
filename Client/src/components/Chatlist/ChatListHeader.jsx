@@ -25,7 +25,7 @@ function ChatListHeader() {
 
   const showContextMenu = (event) => {
     event.preventDefault();
-    setContextMenuCordinates({x: event.pageX, y: event.pageY});
+    setContextMenuCordinates({x: event.clientX, y: event.clientY});
     setIsContextMenuVisible(true);
   };
 

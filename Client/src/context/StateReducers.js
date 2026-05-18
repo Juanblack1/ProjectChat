@@ -6,6 +6,7 @@ export const initialState= {
     contactsPage: false,
     currentChatUser: undefined,
     messages: [],
+    messagesLoading: false,
     messagesSearch:false,
     contactSearch:"",
     contactFilter:"all",
@@ -38,6 +39,12 @@ const reducer = (state,action) => {
             return{
                 ...state,
                 messages: action.messages,
+                messagesLoading: false,
+            }
+        case reducerCases.SET_MESSAGES_LOADING:
+            return{
+                ...state,
+                messagesLoading: action.messagesLoading,
             }
         case reducerCases.ADD_MESSAGE:
             if (state.messages.some((message) => message.id === action.newMessage.id)) {

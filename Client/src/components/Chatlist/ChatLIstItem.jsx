@@ -18,6 +18,7 @@ function ChatLIstItem({data, isContactsPage = false}) {
   const previewTime = preview.createdAt
     ? new Date(preview.createdAt).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"})
     : "";
+  const fallbackText = data?.isOnline ? "online" : data?.about || data?.lastSeen || "Sem mensagens ainda";
 
   const handleContactClick = () => {
     dispatch({type:reducerCases.CHANGE_CURRENT_CHAT_USER,user:{...data}})
@@ -47,7 +48,7 @@ function ChatLIstItem({data, isContactsPage = false}) {
         <div className="flex items-center gap-1 min-w-0">
           {preview.fromSelf && <MessageStatus messageStatus={preview.messageStatus} />}
           <span className={`line-clamp-1 text-sm ${unreadCount ? "text-primary-strong font-medium" : "text-secondary"}`}>
-            {data?.isTyping ? "digitando..." : preview.text || data?.about || "Sem mensagens ainda"}
+            {data?.isTyping ? "digitando..." : preview.text || fallbackText}
           </span>
         </div>
         <div className="flex items-center gap-2 min-w-fit">

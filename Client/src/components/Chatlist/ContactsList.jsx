@@ -41,8 +41,12 @@ function ContactsList() {
       setAllContacts(groupedContacts);
     };
     loadContacts();
+    const presenceInterval = setInterval(loadContacts, 30000);
     const unsubscribe = subscribeToProfiles(loadContacts);
-    return () => unsubscribe();
+    return () => {
+      clearInterval(presenceInterval);
+      unsubscribe();
+    };
   }, [userInfo?.id])
 
   return (

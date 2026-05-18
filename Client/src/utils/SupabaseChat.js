@@ -1,6 +1,35 @@
 import { supabase } from "./SupabaseConfig";
 
 const DEFAULT_AVATAR = "/default_avatar.png";
+const ONLINE_WINDOW_MS = 90 * 1000;
+
+const getLastSeenDate = (lastSeen) => {
+  if (!lastSeen) return null;
+  const date = new Date(lastSeen);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const isProfileOnline = (lastSeen) => {
+  const date = getLastSeenDate(lastSeen);
+  return date ? Date.now() - date.getTime() <= ONLINE_WINDOW_MS : false;
+};
+
+export const formatPresence = (lastSeen) => {
+  const date = getLastSeenDate(lastSeen);
+  if (!date) return "offline";
+
+  const diffMs = Date.now() - date.getTime();
+  if (diffMs <= ONLINE_WINDOW_MS) return "online";
+  if (diffMs < 5 * 60 * 1000) return "visto agora";
+  if (diffMs < 60 * 60 * 1000) return `visto ha ${Math.floor(diffMs / 60000)} min`;
+
+  const today = new Date();
+  const isToday = date.toDateString() === today.toDateString();
+  const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  if (isToday) return `visto hoje as ${time}`;
+  return `visto em ${date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} as ${time}`;
+};
 
 export const mapProfileToUser = (profile) => ({
   id: profile.id,
@@ -10,7 +39,9 @@ export const mapProfileToUser = (profile) => ({
   profilePicture: profile.profile_picture || DEFAULT_AVATAR,
   status: profile.about || "Disponivel",
   about: profile.about || "Disponivel",
-  lastSeen: profile.last_seen,
+  lastSeenAt: profile.last_seen,
+  lastSeen: formatPresence(profile.last_seen),
+  isOnline: isProfileOnline(profile.last_seen),
 });
 
 export const mapMessageFromRow = (message) => ({
@@ -84,6 +115,15 @@ export const updateProfile = async (userId, profile) => {
   return mapProfileToUser(data);
 };
 
+export const updateLastSeen = async (userId) => {
+  if (!supabase || !userId) return;
+
+  await supabase
+    .from("profiles")
+    .update({ last_seen: new Date().toISOString() })
+    .eq("id", userId);
+};
+
 export const getContacts = async (currentUserId) => {
   if (!supabase || !currentUserId) return [];
 
@@ -133,7 +173,6 @@ export const getContactsWithPreviews = async (currentUserId) => {
       recieverId: latest?.receiver_id,
       totalUnreadMessages: unreadByContact.get(contact.id) || 0,
       unreadCount: unreadByContact.get(contact.id) || 0,
-      isOnline: contact.lastSeen ? Date.now() - new Date(contact.lastSeen).getTime() < 5 * 60 * 1000 : false,
       label: "Contato",
     };
   });

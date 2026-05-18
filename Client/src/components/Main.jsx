@@ -3,12 +3,13 @@ import { useStateProvider } from "@/context/StateContext";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { getDemoConversation, getDemoProfile, hasDemoSession } from "@/utils/DemoData";
 import { supabase } from "@/utils/SupabaseConfig";
-import { ensureProfile, getConversationMessages, markConversationRead, subscribeToMessages } from "@/utils/SupabaseChat";
+import { ensureProfile, getConversationMessages, markConversationRead, subscribeToMessages, updateLastSeen } from "@/utils/SupabaseChat";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Chat from "./Chat/Chat";
 import SearchMessages from "./Chat/SearchMessages";
 import ChatList from "./Chatlist/ChatList";
+import LoadingScreen from "./common/LoadingScreen";
 import Empty from "./Empty";
 
 function Main() {
@@ -90,9 +91,27 @@ function Main() {
   }, [dispatch, router]);
 
   useEffect(() => {
+    if (IS_DEMO_MODE || !userInfo?.id) return;
+
+    updateLastSeen(userInfo.id);
+    const interval = setInterval(() => updateLastSeen(userInfo.id), 45000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") updateLastSeen(userInfo.id);
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [userInfo?.id]);
+
+  useEffect(() => {
     let unsubscribe = () => {};
 
     const getMessages = async () => {
+      dispatch({type: reducerCases.SET_MESSAGES_LOADING, messagesLoading: true});
       if (IS_DEMO_MODE) {
         dispatch({
           type: reducerCases.SET_MESSAGES,
@@ -101,15 +120,20 @@ function Main() {
         return;
       }
 
-      const messages = await getConversationMessages(userInfo.id, currentChatUser.id);
-      dispatch({
-        type:reducerCases.SET_MESSAGES, messages
-      });
-      await markConversationRead(userInfo.id, currentChatUser.id);
+      try {
+        const messages = await getConversationMessages(userInfo.id, currentChatUser.id);
+        dispatch({
+          type:reducerCases.SET_MESSAGES, messages
+        });
+        await markConversationRead(userInfo.id, currentChatUser.id);
 
-      unsubscribe = subscribeToMessages(userInfo.id, currentChatUser.id, (newMessage) => {
-        dispatch({type: reducerCases.ADD_MESSAGE, newMessage});
-      });
+        unsubscribe = subscribeToMessages(userInfo.id, currentChatUser.id, (newMessage) => {
+          dispatch({type: reducerCases.ADD_MESSAGE, newMessage});
+        });
+      } catch (error) {
+        console.error(error);
+        dispatch({type: reducerCases.SET_MESSAGES, messages: []});
+      }
     };
 
     if(currentChatUser?.id && userInfo?.id){
@@ -120,7 +144,7 @@ function Main() {
   }, [currentChatUser?.id, dispatch, userInfo?.id])
 
   if (!authChecked) {
-    return <div className="h-screen w-screen bg-search-input-container-background" />;
+    return <LoadingScreen />;
   }
 
   return (

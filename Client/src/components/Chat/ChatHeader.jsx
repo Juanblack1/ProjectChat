@@ -23,7 +23,7 @@ function ChatHeader() {
     if (messagesSearch) {
       dispatch({type: reducerCases.SET_MESSAGE_SEARCH});
     }
-    setContextMenuCordinates({x: event.pageX, y: event.pageY});
+    setContextMenuCordinates({x: event.clientX, y: event.clientY});
     setIsContextMenuVisible(true);
   };
 

@@ -10,6 +10,7 @@ import { BsEmojiSmile } from "react-icons/bs";
 import { FaMicrophone } from "react-icons/fa";
 import { ImAttachment } from "react-icons/im";
 import { MdSend } from "react-icons/md";
+import ImageCanvasEditor from "./ImageCanvasEditor";
 import PhotoPicker from "../common/PhotoPicker";
 const CaptureAudio = dynamic(() => import("../common/CaptureAudio"),{ssr:false});
 
@@ -22,6 +23,8 @@ function MessageBar() {
   const emojiPickerRef = useRef(null);
   const [grabPhoto, setGrabPhoto] = useState(false);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null);
+  const [sendingImage, setSendingImage] = useState(false);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -112,8 +115,18 @@ function MessageBar() {
       const file = e.target.files[0];
       if (!file) return;
 
+      const imageUrl = await readFileAsDataUrl(file);
+      setPendingImage(imageUrl);
+      setGrabPhoto(false);
+    } catch(err){
+      console.log(err)
+    }
+  };
+
+  const sendEditedImage = async (imageUrl) => {
+    setSendingImage(true);
+    try {
       if (IS_DEMO_MODE) {
-        const imageUrl = await readFileAsDataUrl(file);
         const newMessage = createDemoMessage({
           contactId: currentChatUser.id,
           type: "image",
@@ -125,11 +138,10 @@ function MessageBar() {
           newMessage,
           fromSelf: true,
         });
-        setGrabPhoto(false);
+        setPendingImage(null);
         return;
       }
 
-      const imageUrl = await readFileAsDataUrl(file);
       const newMessage = await sendSupabaseMessage({
         from: userInfo?.id,
         to: currentChatUser?.id,
@@ -143,13 +155,16 @@ function MessageBar() {
           fromSelf: true,
         });
       }
-      setGrabPhoto(false);
+      setPendingImage(null);
     } catch(err){
       console.log(err)
+    } finally {
+      setSendingImage(false);
     }
   };
 
   return( 
+  <>
   <div className="bg-panel-header-background min-h-20 px-4 flex items-center gap-6 relative border-l border-conversation-border border-t border-conversation-border">
     {
       !showAudioRecorder && (
@@ -217,6 +232,18 @@ function MessageBar() {
       showAudioRecorder && <CaptureAudio hide={setShowAudioRecorder} />
     }
   </div>
+    {pendingImage && (
+      <ImageCanvasEditor
+        imageSrc={pendingImage}
+        title="Preparar imagem"
+        confirmLabel="Enviar imagem"
+        busy={sendingImage}
+        defaultDrawMode={true}
+        onClose={() => setPendingImage(null)}
+        onConfirm={sendEditedImage}
+      />
+    )}
+  </>
   );
 }
 

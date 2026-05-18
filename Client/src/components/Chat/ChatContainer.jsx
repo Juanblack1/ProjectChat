@@ -10,7 +10,7 @@ import ImageMessage from "./ImageMessage";
 const VoiceMessage = dynamic(()=> import("./VoiceMessage"), {ssr: false});
 
 function ChatContainer() {
-  const [{messages, currentChatUser, userInfo}] = useStateProvider();
+  const [{messages, messagesLoading, currentChatUser, userInfo}] = useStateProvider();
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -34,7 +34,12 @@ function ChatContainer() {
         </div>
         <div className="flex w-full">
           <div className="flex flex-col justify-end w-full gap-2 overflow-auto">
-            {messages.length === 0 && (
+            {messagesLoading && (
+              <div className="mx-auto text-center text-secondary bg-panel-header-background/80 rounded-xl px-6 py-5 border border-conversation-border max-w-[420px]">
+                Carregando mensagens...
+              </div>
+            )}
+            {!messagesLoading && messages.length === 0 && (
               <div className="mx-auto text-center text-secondary bg-panel-header-background/80 rounded-xl px-6 py-5 border border-conversation-border max-w-[420px]">
                 Nenhuma mensagem ainda. Envie a primeira mensagem para iniciar a conversa.
               </div>
