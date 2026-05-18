@@ -9,10 +9,11 @@ import ImageCanvasEditor from "./ImageCanvasEditor";
 
 function ImageMessage({ message }) {
   const [{currentChatUser, userInfo}] =  useStateProvider();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const imageUrl = getAssetUrl(message.message);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [localImage, setLocalImage] = useState("");
+  const [error, setError] = useState("");
   const annotationKey = useMemo(() => (
     userInfo?.id && message.id ? `projectchat:image-annotation:${userInfo.id}:${message.id}` : ""
   ), [message.id, userInfo?.id]);
@@ -28,9 +29,10 @@ function ImageMessage({ message }) {
     try {
       window.localStorage.setItem(annotationKey, imageDataUrl);
       setLocalImage(imageDataUrl);
+      setError("");
       setViewerOpen(false);
-    } catch (error) {
-      console.log(error);
+    } catch {
+      setError(t("image.saveError"));
     }
   };
 
@@ -54,7 +56,7 @@ function ImageMessage({ message }) {
       <div className="absolute bottom-1 right-1 flex items-end gap-1">
       <span className="text-bubble-meta text-[11px] pt-1 min-w-fit">
         {
-          calculateTime(message.createdAt)
+          calculateTime(message.createdAt, language)
         }
       </span>
       <span className="text-bubble-meta">
@@ -66,6 +68,7 @@ function ImageMessage({ message }) {
       </span>
       </div>
     </button>
+    {error && <div className="text-red-200 text-xs px-2 pb-1 max-w-[320px]">{error}</div>}
   </div>
     {viewerOpen && (
       <ImageCanvasEditor

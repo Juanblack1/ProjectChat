@@ -8,7 +8,7 @@ import { IoClose } from "react-icons/io5";
 
 function SearchMessages() {
   const [{currentChatUser, messages}, dispatch] = useStateProvider();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchedMessages, setSearchedMessages] = useState([]);
 
@@ -68,7 +68,7 @@ function SearchMessages() {
           {
             searchedMessages.map((message) => (<div key={message.id} className="flex cursor-pointer flex-col justify-center hover:bg-background-default-hover w-full px-5 border-b border-conversation-border py-5">
               <div className="text-sm text-secondary">
-                {calculateTime(message.createdAt)}
+                {calculateTime(message.createdAt, language)}
                 </div>
               <div className="text-icon-green text-base mt-1 leading-relaxed">{message.message}</div>
             </div>))

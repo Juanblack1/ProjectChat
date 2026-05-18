@@ -1,9 +1,9 @@
 export const DEMO_USER = {
   id: 1,
-  name: "Voce",
+  name: "ProjectChat User",
   email: "voce@projectchat.local",
   profileImage: "/default_avatar.png",
-  status: "Disponivel no ProjectChat Web",
+  status: "",
 };
 
 const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
@@ -276,13 +276,13 @@ export const getDemoConversation = (contactId) => {
   return store[key];
 };
 
-export const getDemoConversationPreview = (contact) => {
+export const getDemoConversationPreview = (contact, labels = {}) => {
   const conversation = getDemoConversation(contact.id);
   const lastMessage = conversation[conversation.length - 1];
 
   if (!lastMessage) {
     return {
-      text: "Conversa limpa",
+      text: labels.clearedConversation || "Conversa limpa",
       createdAt: null,
       messageStatus: null,
       fromSelf: false,
@@ -290,7 +290,11 @@ export const getDemoConversationPreview = (contact) => {
   }
 
   return {
-    text: lastMessage.type === "image" ? "Foto" : lastMessage.type === "audio" ? "Audio" : lastMessage.message,
+    text: lastMessage.type === "image"
+      ? labels.photo || "Foto"
+      : lastMessage.type === "audio"
+        ? labels.audio || "Audio"
+        : lastMessage.message,
     createdAt: lastMessage.createdAt,
     messageStatus: lastMessage.messageStatus,
     fromSelf: lastMessage.senderId === DEMO_USER.id,

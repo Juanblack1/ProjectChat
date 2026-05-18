@@ -14,6 +14,17 @@ import LanguageSelector from "@/components/common/LanguageSelector";
 
 const PENDING_SIGNUP_PROFILE_KEY = "projectchat:pending-signup-profile";
 
+const getPendingSignupProfile = () => {
+  if (typeof window === "undefined") return {};
+
+  try {
+    return JSON.parse(window.localStorage.getItem(PENDING_SIGNUP_PROFILE_KEY) || "{}");
+  } catch {
+    window.localStorage.removeItem(PENDING_SIGNUP_PROFILE_KEY);
+    return {};
+  }
+};
+
 function Login() {
   const router = useRouter()
 
@@ -44,7 +55,7 @@ function Login() {
     if (IS_DEMO_MODE || !supabase) return;
 
     const activateSignupCompletion = (session) => {
-      const pendingProfile = JSON.parse(window.localStorage.getItem(PENDING_SIGNUP_PROFILE_KEY) || "{}");
+      const pendingProfile = getPendingSignupProfile();
       setEmail(session?.user?.email || pendingProfile.email || "");
       setName(pendingProfile.name || session?.user?.email?.split("@")[0] || "");
       setAuthMode("completeSignup");

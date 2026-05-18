@@ -21,6 +21,7 @@ const dictionaries = {
     "common.processing": "Processando...",
     "common.email": "Email",
     "common.password": "Senha",
+    "date.yesterday": "Ontem",
 
     "auth.recoveryPrompt": "Digite uma nova senha para concluir a recuperacao da conta.",
     "auth.signupConfirmedPrompt": "Email confirmado. Crie sua senha para concluir o cadastro.",
@@ -88,6 +89,8 @@ const dictionaries = {
     "chat.messagePlaceholder": "Mensagem",
     "chat.attachFile": "Anexar arquivo",
     "chat.record": "Gravar",
+    "chat.sendMessageError": "Nao foi possivel enviar a mensagem. Tente novamente.",
+    "chat.sendImageError": "Nao foi possivel enviar a imagem. Tente novamente.",
     "chat.imageAlt": "Imagem enviada",
     "chat.prepareImage": "Preparar imagem",
     "chat.sendImage": "Enviar imagem",
@@ -99,6 +102,7 @@ const dictionaries = {
     "image.save": "Salvar",
     "image.help": "Use zoom para aproximar e rabisque quando quiser marcar algo.",
     "image.loadError": "Nao foi possivel carregar a imagem.",
+    "image.saveError": "Nao foi possivel salvar a anotacao neste navegador.",
     "image.drawingOn": "Rabiscando",
     "image.draw": "Rabiscar",
     "image.undo": "Desfazer",
@@ -122,6 +126,7 @@ const dictionaries = {
     "contacts.photo": "Foto",
     "contacts.audio": "Audio",
     "contacts.noMessages": "Sem mensagens ainda",
+    "contacts.clearedConversation": "Conversa limpa",
     "contacts.pinned": "Fixado",
     "contacts.muted": "Sil.",
 
@@ -152,6 +157,7 @@ const dictionaries = {
     "empty.footer": "Suas conversas permanecem disponiveis em tempo real.",
 
     "audio.microphonePermission": "Permita o uso do microfone para gravar audio.",
+    "audio.sendError": "Nao foi possivel enviar o audio. Tente novamente.",
     "audio.recording": "Gravando",
   },
   en: {
@@ -168,6 +174,7 @@ const dictionaries = {
     "common.processing": "Processing...",
     "common.email": "Email",
     "common.password": "Password",
+    "date.yesterday": "Yesterday",
 
     "auth.recoveryPrompt": "Enter a new password to finish account recovery.",
     "auth.signupConfirmedPrompt": "Email confirmed. Create your password to finish registration.",
@@ -235,6 +242,8 @@ const dictionaries = {
     "chat.messagePlaceholder": "Message",
     "chat.attachFile": "Attach file",
     "chat.record": "Record",
+    "chat.sendMessageError": "Could not send the message. Try again.",
+    "chat.sendImageError": "Could not send the image. Try again.",
     "chat.imageAlt": "Sent image",
     "chat.prepareImage": "Prepare image",
     "chat.sendImage": "Send image",
@@ -246,6 +255,7 @@ const dictionaries = {
     "image.save": "Save",
     "image.help": "Use zoom to get closer and draw whenever you want to mark something.",
     "image.loadError": "Could not load the image.",
+    "image.saveError": "Could not save the annotation in this browser.",
     "image.drawingOn": "Drawing",
     "image.draw": "Draw",
     "image.undo": "Undo",
@@ -269,6 +279,7 @@ const dictionaries = {
     "contacts.photo": "Photo",
     "contacts.audio": "Audio",
     "contacts.noMessages": "No messages yet",
+    "contacts.clearedConversation": "Cleared conversation",
     "contacts.pinned": "Pinned",
     "contacts.muted": "Muted",
 
@@ -299,6 +310,7 @@ const dictionaries = {
     "empty.footer": "Your conversations stay available in real time.",
 
     "audio.microphonePermission": "Allow microphone access to record audio.",
+    "audio.sendError": "Could not send the audio. Try again.",
     "audio.recording": "Recording",
   },
 };

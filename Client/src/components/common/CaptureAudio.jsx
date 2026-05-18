@@ -73,8 +73,7 @@ function CaptureAudio({hide}) {
       };
 
       mediaRecorder.start();
-    }).catch((error) => {
-      console.log("Error accessing microphone:", error);
+    }).catch(() => {
       setRecordingError(t("audio.microphonePermission"));
       setIsRecording(false);
     });
@@ -143,6 +142,7 @@ function CaptureAudio({hide}) {
   const sendRecording = async () =>{
     try{
       if (!renderedAudio) return;
+      setRecordingError("");
 
       if (IS_DEMO_MODE) {
         const audioUrl = await readFileAsDataUrl(renderedAudio);
@@ -176,8 +176,8 @@ function CaptureAudio({hide}) {
         });
       }
       hide(false)
-    } catch(err){
-      console.log(err)
+    } catch{
+      setRecordingError(t("audio.sendError"));
     }
   };
 

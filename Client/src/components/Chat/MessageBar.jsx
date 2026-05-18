@@ -27,6 +27,7 @@ function MessageBar() {
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
   const [sendingImage, setSendingImage] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -65,6 +66,7 @@ function MessageBar() {
   const sendMessage = async() => {
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
+    setSendError("");
 
     try {
       if (IS_DEMO_MODE) {
@@ -95,8 +97,8 @@ function MessageBar() {
         });
       }
       setMessage("")
-    } catch (err) {
-      console.log(err)
+    } catch {
+      setSendError(t("chat.sendMessageError"));
     }
   };
 
@@ -117,16 +119,18 @@ function MessageBar() {
       const file = e.target.files[0];
       if (!file) return;
 
+      setSendError("");
       const imageUrl = await readFileAsDataUrl(file);
       setPendingImage(imageUrl);
       setGrabPhoto(false);
-    } catch(err){
-      console.log(err)
+    } catch{
+      setSendError(t("image.loadError"));
     }
   };
 
   const sendEditedImage = async (imageUrl) => {
     setSendingImage(true);
+    setSendError("");
     try {
       if (IS_DEMO_MODE) {
         const newMessage = createDemoMessage({
@@ -158,8 +162,8 @@ function MessageBar() {
         });
       }
       setPendingImage(null);
-    } catch(err){
-      console.log(err)
+    } catch{
+      setSendError(t("chat.sendImageError"));
     } finally {
       setSendingImage(false);
     }
@@ -168,6 +172,11 @@ function MessageBar() {
   return( 
   <>
   <div className="bg-panel-header-background min-h-20 px-4 flex items-center gap-6 relative border-l border-conversation-border border-t border-conversation-border">
+    {sendError && (
+      <div className="absolute bottom-full left-4 mb-2 rounded-lg border border-red-500/20 bg-red-950/80 px-4 py-2 text-xs text-red-200 shadow-lg">
+        {sendError}
+      </div>
+    )}
     {
       !showAudioRecorder && (
     <>

@@ -11,7 +11,11 @@ function ChatLIstItem({data, isContactsPage = false}) {
   const[{currentChatUser}, dispatch] = useStateProvider()
   const { t, language } = useI18n();
   const isActive = currentChatUser?.id === data?.id;
-  const preview = IS_DEMO_MODE ? getDemoConversationPreview(data) : {
+  const preview = IS_DEMO_MODE ? getDemoConversationPreview(data, {
+    audio: t("contacts.audio"),
+    clearedConversation: t("contacts.clearedConversation"),
+    photo: t("contacts.photo"),
+  }) : {
     text: data?.type === "image" ? t("contacts.photo") : data?.type === "audio" ? t("contacts.audio") : data?.message,
     createdAt: data?.createdAt,
     messageStatus: data?.messageStatus,
@@ -19,7 +23,7 @@ function ChatLIstItem({data, isContactsPage = false}) {
   };
   const unreadCount = isActive ? 0 : (data?.unreadCount || data?.totalUnreadMessages || 0);
   const previewTime = preview.createdAt
-    ? new Date(preview.createdAt).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"})
+    ? new Date(preview.createdAt).toLocaleTimeString(language === "en" ? "en-US" : "pt-BR", {hour: "2-digit", minute: "2-digit"})
     : "";
   const fallbackText = data?.isOnline ? t("presence.online") : data?.about || (data?.lastSeenAt ? formatPresence(data.lastSeenAt, language) : data?.lastSeen) || t("contacts.noMessages");
 

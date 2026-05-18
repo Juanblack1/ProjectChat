@@ -12,7 +12,7 @@ const VoiceMessage = dynamic(()=> import("./VoiceMessage"), {ssr: false});
 
 function ChatContainer() {
   const [{messages, messagesLoading, currentChatUser, userInfo}] = useStateProvider();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ function ChatContainer() {
                       <span className="break-words whitespace-pre-wrap leading-relaxed">{message.message}</span>
                       <div className="flex gap-1 items-end min-w-fit">
                         <span className="text-bubble-meta text-[11px] pt-1 min-w-fit">
-                          {calculateTime(message.createdAt)}
+                          {calculateTime(message.createdAt, language)}
                         </span>
                         <span>
                           {message.senderId === userInfo.id && <MessageStatus messageStatus={message.messageStatus} />}

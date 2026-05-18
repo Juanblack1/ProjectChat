@@ -1,6 +1,7 @@
 import { useStateProvider } from "@/context/StateContext";
 import { getAssetUrl } from "@/utils/AssetUrl";
 import { calculateTime } from "@/utils/CalculateTime";
+import { useI18n } from "@/utils/useI18n";
 import { useEffect, useRef, useState } from "react";
 import { FaPlay, FaStop } from "react-icons/fa";
 import WaveSurfer from "wavesurfer.js";
@@ -9,6 +10,7 @@ import MessageStatus from "../common/MessageStatus";
 
 function VoiceMessage({message}) {
   const [{currentChatUser, userInfo}] = useStateProvider();
+  const { language } = useI18n();
   const [audioMessage, setAudioMessage]= useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
@@ -114,7 +116,7 @@ function VoiceMessage({message}) {
         <div className="flex gap-1">
           <span>
             {
-              calculateTime(message.createdAt)
+              calculateTime(message.createdAt, language)
             }
           </span>
           {
