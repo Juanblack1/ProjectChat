@@ -1,12 +1,14 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { calculateTime } from "@/utils/CalculateTime";
+import { useI18n } from "@/utils/useI18n";
 import { useEffect, useState } from "react";
 import { BiSearchAlt2 } from "react-icons/bi";
 import { IoClose } from "react-icons/io5";
 
 function SearchMessages() {
   const [{currentChatUser, messages}, dispatch] = useStateProvider();
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchedMessages, setSearchedMessages] = useState([]);
 
@@ -31,7 +33,7 @@ function SearchMessages() {
       onClick={() => dispatch({type:reducerCases.SET_MESSAGE_SEARCH})}
       />
       <div>
-        <div className="font-semibold">Pesquisar mensagens</div>
+        <div className="font-semibold">{t("chat.searchMessages")}</div>
         <div className="text-secondary text-xs">{currentChatUser.name}</div>
       </div>
     </div>
@@ -41,7 +43,7 @@ function SearchMessages() {
           <div className="bg-panel-header-background flex items-center gap-4 px-4 py-2 rounded-lg flex-grow">
             <BiSearchAlt2 className="text-panel-header-icon cursor-pointer text-l" />
             <input type="text"
-              placeholder="Pesquisar nesta conversa"
+              placeholder={t("chat.searchInConversation")}
               className="bg-transparent text-sm focus:outline-none text-white w-full placeholder:text-secondary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -49,14 +51,14 @@ function SearchMessages() {
           </div>
         </div>
         <span className="mt-8 text-secondary text-base px-8 text-center">
-          {!searchTerm.length && `Pesquisar mensagens de ${currentChatUser.name}`}
+          {!searchTerm.length && t("chat.searchMessagesFrom", {name: currentChatUser.name})}
         </span>
       </div>
       <div className="flex justify-center h-full flex-col">
         {
           searchTerm.length > 0 && !searchedMessages.length && (
           <span className="text-secondary w-full flex justify-center text-base mt-10">
-            Mensagem não encontrada
+            {t("chat.messageNotFound")}
           </span>
           )
         }

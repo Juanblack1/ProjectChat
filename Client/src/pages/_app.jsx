@@ -1,5 +1,6 @@
 import { StateProvider } from "@/context/StateContext";
 import reducer, { initialState } from "@/context/StateReducers";
+import LanguageBootstrap from "@/components/common/LanguageBootstrap";
 import "@/styles/globals.css";
 import Head from "next/head";
 
@@ -11,6 +12,7 @@ export default function App({ Component, pageProps }) {
         <meta name="description" content="ProjectChat real-time chat" />
         <link rel="shortcut icon" href="/favicon.png"/>
       </Head>
+      <LanguageBootstrap />
       <Component {...pageProps} />
     </StateProvider>
   )

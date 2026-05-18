@@ -2,6 +2,8 @@ import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { saveDemoConversation } from "@/utils/DemoData";
+import { formatPresence } from "@/utils/I18n";
+import { useI18n } from "@/utils/useI18n";
 import { useState } from "react";
 import { BiArrowBack, BiSearchAlt2 } from "react-icons/bi";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -10,13 +12,14 @@ import ContextMenu from "../common/ContextMenu";
 
 function ChatHeader() {
   const [{ currentChatUser, messagesSearch }, dispatch] = useStateProvider();
+  const { t, language } = useI18n();
   const [isContextMenuVisible, setIsContextMenuVisible] = useState(false);
   const [contextMenuCordinates, setContextMenuCordinates] = useState({x: 0, y: 0});
   const contactStatus = currentChatUser?.isTyping
-    ? "digitando..."
+    ? t("presence.typing")
     : currentChatUser?.isOnline
-      ? "online"
-      : currentChatUser?.lastSeen || "visto recentemente";
+      ? t("presence.online")
+      : currentChatUser?.lastSeenAt ? formatPresence(currentChatUser.lastSeenAt, language) : currentChatUser?.lastSeen || t("presence.recently");
 
   const showContextMenu = (event) => {
     event.preventDefault();
@@ -35,8 +38,9 @@ function ChatHeader() {
   };
 
   const menuOptions = [
-    {name: "Limpar conversa", callback: clearConversation},
+    {name: t("chat.clearConversation"), callback: clearConversation},
   ];
+  const contactLabel = currentChatUser?.label === "Contato" ? t("contacts.label") : currentChatUser?.label;
 
   return (
   <>
@@ -54,18 +58,18 @@ function ChatHeader() {
         <span className="text-primary-strong font-semibold truncate">{currentChatUser?.name}</span>
         <span className={`text-sm truncate ${currentChatUser?.isTyping ? "text-icon-green" : "text-secondary"}`}>{contactStatus}</span>
       </div>
-      {currentChatUser?.label && <span className="hidden md:inline-flex text-[10px] uppercase tracking-wide text-teal-light border border-teal-light/30 rounded-full px-2 py-0.5">{currentChatUser.label}</span>}
+      {contactLabel && <span className="hidden md:inline-flex text-[10px] uppercase tracking-wide text-teal-light border border-teal-light/30 rounded-full px-2 py-0.5">{contactLabel}</span>}
     </div>
     <div className="flex gap-6 min-w-fit">
       <BiSearchAlt2
       className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-      title="Search messages"
+      title={t("chat.searchMessages")}
       onClick={() => dispatch({type:reducerCases.SET_MESSAGE_SEARCH})}
       />
       <BsThreeDotsVertical
       className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
       id="context-opener"
-      title="Chat menu"
+      title={t("chat.menu")}
       onClick={showContextMenu}
       />
     </div>

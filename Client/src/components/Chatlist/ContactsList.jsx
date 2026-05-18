@@ -3,6 +3,7 @@ import { useStateProvider } from "@/context/StateContext";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { DEMO_CONTACT_GROUPS } from "@/utils/DemoData";
 import { getContacts, subscribeToProfiles } from "@/utils/SupabaseChat";
+import { useI18n } from "@/utils/useI18n";
 import { useEffect, useState } from "react";
 import { BiArrowBack, BiSearchAlt2 } from "react-icons/bi";
 import ChatLIstItem from "./ChatLIstItem";
@@ -11,6 +12,7 @@ function ContactsList() {
   const [allContacts, setAllContacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [{userInfo}, dispatch] = useStateProvider();
+  const { t } = useI18n();
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const visibleContacts = Object.entries(allContacts).reduce((groups, [initialLetter, userList]) => {
     const contacts = normalizedSearch
@@ -59,8 +61,8 @@ function ContactsList() {
       }
         />
         <div>
-          <div className="text-lg font-semibold">Nova conversa</div>
-          <div className="text-xs text-secondary">{Object.values(allContacts).flat().length} contatos disponiveis</div>
+          <div className="text-lg font-semibold">{t("contacts.newConversation")}</div>
+          <div className="text-xs text-secondary">{t("contacts.available", {count: Object.values(allContacts).flat().length})}</div>
         </div>
       </div>
     </div>
@@ -70,7 +72,7 @@ function ContactsList() {
           <BiSearchAlt2 className="text-panel-header-icon cursor-pointer text-l" />
           <input
             type="text"
-            placeholder="Pesquisar contatos"
+            placeholder={t("contacts.search")}
             className="bg-transparent text-sm focus:outline-none text-white w-full placeholder:text-secondary"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
@@ -95,7 +97,7 @@ function ContactsList() {
         })
       }
       {Object.keys(visibleContacts).length === 0 && (
-        <div className="text-secondary text-sm px-8 py-12 text-center">Nenhum contato encontrado.</div>
+        <div className="text-secondary text-sm px-8 py-12 text-center">{t("contacts.noneFound")}</div>
       )}
     </div>    
   </div>

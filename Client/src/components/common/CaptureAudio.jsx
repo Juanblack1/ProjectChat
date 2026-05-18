@@ -3,6 +3,7 @@ import { useStateProvider } from "@/context/StateContext";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { addDemoMessage, createDemoMessage, readFileAsDataUrl } from "@/utils/DemoData";
 import { sendMessage as sendSupabaseMessage } from "@/utils/SupabaseChat";
+import { useI18n } from "@/utils/useI18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaMicrophone, FaPauseCircle, FaPlay, FaStop, FaTrash } from "react-icons/fa";
 import { MdSend } from "react-icons/md";
@@ -11,6 +12,7 @@ import WaveSurfer from "wavesurfer.js";
 function CaptureAudio({hide}) {
 
   const [{userInfo, currentChatUser}, dispatch] = useStateProvider();
+  const { t } = useI18n();
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState(null);
@@ -73,10 +75,10 @@ function CaptureAudio({hide}) {
       mediaRecorder.start();
     }).catch((error) => {
       console.log("Error accessing microphone:", error);
-      setRecordingError("Permita o uso do microfone para gravar audio.");
+      setRecordingError(t("audio.microphonePermission"));
       setIsRecording(false);
     });
-  }, [waveForm]);
+  }, [t, waveForm]);
 
   useEffect(() => {
     const wavesurfer = WaveSurfer.create({
@@ -201,7 +203,7 @@ function CaptureAudio({hide}) {
       {
         isRecording?(
         <div className="text-red-500 animate-pulse 2-60 text-center">
-          Gravando <span>{recordingDuration}s</span>
+          {t("audio.recording")} <span>{recordingDuration}s</span>
         </div>)
         :(
         <div>
@@ -248,7 +250,7 @@ function CaptureAudio({hide}) {
           !isRecording && (
             <MdSend 
             className="text-panel-header-icon cursor-pointer mr-4"
-            title="Send"
+            title={t("common.send")}
             onClick={sendRecording}
             />
           )

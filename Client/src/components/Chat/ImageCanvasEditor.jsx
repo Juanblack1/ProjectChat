@@ -1,3 +1,4 @@
+import { useI18n } from "@/utils/useI18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IoClose } from "react-icons/io5";
 
@@ -15,15 +16,16 @@ const loadImage = (src) => new Promise((resolve, reject) => {
 function ImageCanvasEditor({
   imageSrc,
   initialImageSrc,
-  title = "Imagem",
-  confirmLabel = "Salvar",
-  resetLabel = "Remover rabiscos",
+  title,
+  confirmLabel,
+  resetLabel,
   busy = false,
   defaultDrawMode = false,
   onClose,
   onConfirm,
   onReset,
 }) {
+  const { t } = useI18n();
   const canvasRef = useRef(null);
   const drawingRef = useRef(false);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -52,9 +54,9 @@ function ImageCanvasEditor({
       context.drawImage(image, 0, 0, width, height);
       setError("");
     } catch {
-      setError("Nao foi possivel carregar a imagem.");
+      setError(t("image.loadError"));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     setUndoStack([]);
@@ -127,8 +129,8 @@ function ImageCanvasEditor({
       <div className="bg-[#111b21] border border-conversation-border rounded-2xl shadow-2xl w-full h-full max-w-6xl max-h-[94vh] flex flex-col overflow-hidden">
         <div className="min-h-16 px-4 md:px-6 flex items-center justify-between border-b border-conversation-border bg-panel-header-background">
           <div>
-            <h2 className="text-primary-strong font-semibold">{title}</h2>
-            <p className="text-secondary text-xs">Use zoom para aproximar e rabisque quando quiser marcar algo.</p>
+            <h2 className="text-primary-strong font-semibold">{title || t("image.title")}</h2>
+            <p className="text-secondary text-xs">{t("image.help")}</p>
           </div>
           <button className="text-panel-header-icon hover:text-primary-strong text-3xl" type="button" onClick={onClose}>
             <IoClose />
@@ -137,25 +139,25 @@ function ImageCanvasEditor({
 
         <div className="flex flex-wrap items-center gap-2 px-4 md:px-6 py-3 border-b border-conversation-border bg-search-input-container-background">
           <button type="button" className={`px-3 py-2 rounded-lg text-sm ${drawMode ? "bg-icon-green text-black" : "bg-panel-header-background text-primary-strong"}`} onClick={() => setDrawMode((value) => !value)}>
-            {drawMode ? "Rabiscando" : "Rabiscar"}
+            {drawMode ? t("image.drawingOn") : t("image.draw")}
           </button>
           <button type="button" className="px-3 py-2 rounded-lg text-sm bg-panel-header-background text-primary-strong disabled:opacity-40" onClick={undo} disabled={!undoStack.length}>
-            Desfazer
+            {t("image.undo")}
           </button>
           <button type="button" className="px-3 py-2 rounded-lg text-sm bg-panel-header-background text-primary-strong" onClick={resetCanvas}>
-            Limpar
+            {t("image.clear")}
           </button>
           {onReset && (
             <button type="button" className="px-3 py-2 rounded-lg text-sm bg-panel-header-background text-primary-strong" onClick={() => { onReset(); resetCanvas(); }}>
-              {resetLabel}
+              {resetLabel || t("chat.removeDrawings")}
             </button>
           )}
           <div className="flex items-center gap-2 text-secondary text-sm ml-0 md:ml-2">
-            <span>Cor</span>
+            <span>{t("image.color")}</span>
             <input type="color" value={brushColor} onChange={(event) => setBrushColor(event.target.value)} className="h-9 w-10 bg-transparent" />
           </div>
           <label className="flex items-center gap-2 text-secondary text-sm">
-            Pincel
+            {t("image.brush")}
             <input type="range" min="2" max="24" value={brushSize} onChange={(event) => setBrushSize(Number(event.target.value))} />
           </label>
           <div className="flex items-center gap-2 ml-auto">
@@ -186,9 +188,9 @@ function ImageCanvasEditor({
         <div className="px-4 md:px-6 py-4 border-t border-conversation-border bg-panel-header-background flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
           <div className="text-sm text-red-300 min-h-5">{error}</div>
           <div className="flex gap-3 justify-end">
-            <button type="button" className="px-4 py-3 rounded-xl bg-search-input-container-background text-primary-strong" onClick={onClose}>Cancelar</button>
+            <button type="button" className="px-4 py-3 rounded-xl bg-search-input-container-background text-primary-strong" onClick={onClose}>{t("common.cancel")}</button>
             <button type="button" className="px-5 py-3 rounded-xl bg-icon-green text-black font-semibold disabled:opacity-60" onClick={confirm} disabled={busy || Boolean(error)}>
-              {busy ? "Salvando..." : confirmLabel}
+              {busy ? t("common.saving") : confirmLabel || t("image.save")}
             </button>
           </div>
         </div>

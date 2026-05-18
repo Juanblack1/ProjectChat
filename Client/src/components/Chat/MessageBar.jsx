@@ -3,6 +3,7 @@ import { useStateProvider } from "@/context/StateContext";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { addDemoMessage, createDemoMessage, readFileAsDataUrl } from "@/utils/DemoData";
 import { sendMessage as sendSupabaseMessage } from "@/utils/SupabaseChat";
+import { useI18n } from "@/utils/useI18n";
 import EmojiPicker from "emoji-picker-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +19,7 @@ const CaptureAudio = dynamic(() => import("../common/CaptureAudio"),{ssr:false})
 
 function MessageBar() {
   const [{userInfo,currentChatUser}, dispatch] = useStateProvider();
+  const { t } = useI18n();
   const [message, setMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef(null);
@@ -186,7 +188,7 @@ function MessageBar() {
       }
       <ImAttachment
       className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-      title="Attach File"
+      title={t("chat.attachFile")}
       onClick={() => {
         setGrabPhoto (true)
       }}
@@ -195,7 +197,7 @@ function MessageBar() {
     <div className="w-full rounded-lg h-11 flex items-center">
       <input
       type="text"
-      placeholder="Mensagem"
+      placeholder={t("chat.messagePlaceholder")}
       className="bg-input-background text-sm focus:outline-none focus:ring-1 focus:ring-icon-green/60 text-white h-11 rounded-lg px-5 py-4 w-full placeholder:text-secondary"
       onChange={e => setMessage(e.target.value)}
       onKeyDown={(event) => {
@@ -213,12 +215,12 @@ function MessageBar() {
         message.length? (
           <MdSend 
           className="text-icon-green cursor-pointer text-2xl"
-          title="Send message"
+          title={t("common.send")}
           onClick={sendMessage}
           />):(
             <FaMicrophone
             className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-            title="Record"
+            title={t("chat.record")}
             onClick={() => setShowAudioRecorder(true)}
             />
       )}
@@ -235,8 +237,8 @@ function MessageBar() {
     {pendingImage && (
       <ImageCanvasEditor
         imageSrc={pendingImage}
-        title="Preparar imagem"
-        confirmLabel="Enviar imagem"
+        title={t("chat.prepareImage")}
+        confirmLabel={t("chat.sendImage")}
         busy={sendingImage}
         defaultDrawMode={true}
         onClose={() => setPendingImage(null)}

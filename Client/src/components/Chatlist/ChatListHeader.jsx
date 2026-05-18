@@ -3,15 +3,18 @@ import { useStateProvider } from "@/context/StateContext";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { clearDemoData, endDemoSession, getDemoConversation, getDemoProfile } from "@/utils/DemoData";
 import { supabase } from "@/utils/SupabaseConfig";
+import { useI18n } from "@/utils/useI18n";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { BsFillChatLeftTextFill, BsThreeDotsVertical } from "react-icons/bs";
 import Avatar from "../common/Avatar";
 import ContextMenu from "../common/ContextMenu";
+import LanguageSelector from "../common/LanguageSelector";
 import ProfileSettings from "./ProfileSettings";
 
 function ChatListHeader() {
   const [{userInfo, currentChatUser}, dispatch] = useStateProvider();
+  const { t } = useI18n();
   const router = useRouter();
   const [isContextMenuVisible, setIsContextMenuVisible] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -54,31 +57,32 @@ function ChatListHeader() {
   };
 
   const menuOptions = [
-    {name: "Sair", callback: logout},
-    ...(IS_DEMO_MODE ? [{name: "Restaurar conversas", callback: resetDemo}] : []),
+    {name: t("sidebar.logout"), callback: logout},
+    ...(IS_DEMO_MODE ? [{name: t("sidebar.restoreConversations"), callback: resetDemo}] : []),
   ];
 
   return( 
   <>
   <div className="h-[76px] px-4 py-3 flex justify-between items-center bg-panel-header-background border-b border-conversation-border">
-    <div className="flex items-center gap-3 cursor-pointer min-w-0" title="Meu perfil" onClick={() => setIsProfileOpen(true)}>
+    <div className="flex items-center gap-3 cursor-pointer min-w-0" title={t("profile.myProfile")} onClick={() => setIsProfileOpen(true)}>
       <Avatar type="sm" image={userInfo?.profileImage} />
       <div className="min-w-0">
         <div className="text-primary-strong font-semibold leading-5 truncate">ProjectChat</div>
-        <div className="text-secondary text-xs truncate">{userInfo?.name || "Usuario"}</div>
+        <div className="text-secondary text-xs truncate">{userInfo?.name || t("common.user")}</div>
       </div>
     </div>
-    <div className="flex gap-5">
+    <div className="flex gap-4 items-center">
+      <LanguageSelector compact />
       <BsFillChatLeftTextFill 
       className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-      title="Nova conversa"
+      title={t("sidebar.newConversation")}
       onClick={handleAllContactsPage}
       />
       <>
       <BsThreeDotsVertical  
       className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
       id="context-opener"
-      title="Menu"
+      title={t("chat.menu")}
       onClick={showContextMenu}
       />
       </>

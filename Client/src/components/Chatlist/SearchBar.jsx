@@ -1,14 +1,16 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
+import { useI18n } from "@/utils/useI18n";
 import { BiSearchAlt2 } from "react-icons/bi";
 import { BsFilter } from "react-icons/bs";
 function SearchBar() {
   const [{contactSearch, contactFilter}, dispatch] = useStateProvider();
+  const { t } = useI18n();
   const filters = [
-    {label: "Todos", value: "all"},
-    {label: "Nao lidas", value: "unread"},
-    {label: "Favoritos", value: "pinned"},
-    {label: "Grupos", value: "groups"},
+    {label: t("contacts.all"), value: "all"},
+    {label: t("contacts.unread"), value: "unread"},
+    {label: t("contacts.favorites"), value: "pinned"},
+    {label: t("contacts.groups"), value: "groups"},
   ];
 
   return( 
@@ -18,7 +20,7 @@ function SearchBar() {
         <BiSearchAlt2 className="text-panel-header-icon cursor-pointer text-l" />
         <input
           type="text"
-          placeholder="Pesquisar ou comecar uma nova conversa"
+          placeholder={t("contacts.searchConversation")}
           className="bg-transparent text-sm focus:outline-none text-white w-full placeholder:text-secondary"
           value={contactSearch}
           onChange={(event) => dispatch({

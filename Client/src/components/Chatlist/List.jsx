@@ -3,11 +3,13 @@ import { reducerCases } from "@/context/constants";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { DEMO_CONTACTS } from "@/utils/DemoData";
 import { getContactsWithPreviews, subscribeToProfiles, subscribeToUserMessages } from "@/utils/SupabaseChat";
+import { useI18n } from "@/utils/useI18n";
 import { useEffect, useState } from "react";
 import ChatLIstItem from "./ChatLIstItem";
 
 function List() {
   const [{contactSearch, contactFilter, messages, userInfo, currentChatUser}, dispatch] = useStateProvider();
+  const { t } = useI18n();
   const [realContacts, setRealContacts] = useState([]);
   const [error, setError] = useState("");
   const normalizedSearch = contactSearch.trim().toLowerCase();
@@ -25,8 +27,8 @@ function List() {
           if (activeContact) dispatch({type: reducerCases.CHANGE_CURRENT_CHAT_USER, user: activeContact});
           setError("");
         }
-      } catch (err) {
-        if (active) setError(err.message || "Nao foi possivel carregar contatos.");
+      } catch {
+        if (active) setError(t("contacts.loadError"));
       }
     };
 
@@ -41,7 +43,7 @@ function List() {
       unsubscribeProfiles();
       unsubscribeMessages();
     };
-  }, [currentChatUser?.id, dispatch, messages, userInfo?.id]);
+  }, [currentChatUser?.id, dispatch, messages, t, userInfo?.id]);
 
   const sourceContacts = IS_DEMO_MODE ? DEMO_CONTACTS : realContacts;
   const contacts = sourceContacts.filter((contact) => {
@@ -70,7 +72,7 @@ function List() {
     )}
     {contacts.length === 0 && !error && (
       <div className="text-secondary text-sm px-8 py-12 text-center">
-        {IS_DEMO_MODE ? "Nenhuma conversa encontrada para esse filtro." : "Nenhum contato disponivel no momento."}
+        {IS_DEMO_MODE ? t("contacts.noneForFilter") : t("contacts.noneAvailable")}
       </div>
     )}
   </div>

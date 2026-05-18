@@ -10,6 +10,7 @@ export const initialState= {
     messagesSearch:false,
     contactSearch:"",
     contactFilter:"all",
+    language:"pt-BR",
 };
 
 const reducer = (state,action) => {
@@ -68,6 +69,11 @@ const reducer = (state,action) => {
             return {
                 ...state,
                 contactFilter:action.contactFilter,
+            }
+        case reducerCases.SET_LANGUAGE:
+            return {
+                ...state,
+                language:action.language,
             }
         default:
             return state;

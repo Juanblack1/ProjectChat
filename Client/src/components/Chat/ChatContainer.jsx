@@ -1,6 +1,7 @@
 import { useStateProvider } from "@/context/StateContext";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { calculateTime } from "@/utils/CalculateTime";
+import { useI18n } from "@/utils/useI18n";
 import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
 import MessageStatus from "../common/MessageStatus";
@@ -11,6 +12,7 @@ const VoiceMessage = dynamic(()=> import("./VoiceMessage"), {ssr: false});
 
 function ChatContainer() {
   const [{messages, messagesLoading, currentChatUser, userInfo}] = useStateProvider();
+  const { t } = useI18n();
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -25,23 +27,23 @@ function ChatContainer() {
     <div className="absolute inset-0 bg-gradient-to-b from-[#0b141a]/40 via-transparent to-[#0b141a]/70 z-0 pointer-events-none" />
       <div className="mx-5 md:mx-12 my-6 relative bottom-0 z-40 left-0 min-h-[calc(100%-3rem)] flex flex-col justify-end">
         <div className="mx-auto mb-5 rounded-lg bg-panel-header-background/95 text-secondary text-xs px-4 py-2 shadow-lg border border-conversation-border">
-          Hoje
+          {t("chat.today")}
         </div>
         <div className="mx-auto mb-6 rounded-lg bg-[#182229]/95 text-secondary text-xs px-4 py-3 max-w-[560px] text-center shadow-lg border border-conversation-border">
           {IS_DEMO_MODE
-            ? "Ambiente local ativo. As conversas ficam neste navegador."
-            : "Mensagens sincronizadas em tempo real entre os participantes."}
+            ? t("chat.localNotice")
+            : t("chat.realtimeNotice")}
         </div>
         <div className="flex w-full">
           <div className="flex flex-col justify-end w-full gap-2 overflow-auto">
             {messagesLoading && (
               <div className="mx-auto text-center text-secondary bg-panel-header-background/80 rounded-xl px-6 py-5 border border-conversation-border max-w-[420px]">
-                Carregando mensagens...
+                {t("chat.loadingMessages")}
               </div>
             )}
             {!messagesLoading && messages.length === 0 && (
               <div className="mx-auto text-center text-secondary bg-panel-header-background/80 rounded-xl px-6 py-5 border border-conversation-border max-w-[420px]">
-                Nenhuma mensagem ainda. Envie a primeira mensagem para iniciar a conversa.
+                {t("chat.emptyConversation")}
               </div>
             )}
             {

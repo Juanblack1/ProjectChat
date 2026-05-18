@@ -2,12 +2,15 @@ import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { hasDemoSession, startDemoSession } from "@/utils/DemoData";
+import { translate, translateAuthError } from "@/utils/I18n";
 import { isSupabaseConfigured, supabase } from "@/utils/SupabaseConfig";
 import { ensureProfile } from "@/utils/SupabaseChat";
+import { useI18n } from "@/utils/useI18n";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { BsShieldLockFill, BsWindowSidebar } from "react-icons/bs";
+import LanguageSelector from "@/components/common/LanguageSelector";
 
 const PENDING_SIGNUP_PROFILE_KEY = "projectchat:pending-signup-profile";
 
@@ -15,6 +18,7 @@ function Login() {
   const router = useRouter()
 
   const [{userInfo, newUser}, dispatch] = useStateProvider();
+  const { t, language } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -39,28 +43,38 @@ function Login() {
   useEffect(() => {
     if (IS_DEMO_MODE || !supabase) return;
 
+    const activateSignupCompletion = (session) => {
+      const pendingProfile = JSON.parse(window.localStorage.getItem(PENDING_SIGNUP_PROFILE_KEY) || "{}");
+      setEmail(session?.user?.email || pendingProfile.email || "");
+      setName(pendingProfile.name || session?.user?.email?.split("@")[0] || "");
+      setAuthMode("completeSignup");
+      setError("");
+      setInfo(translate("auth.signupConfirmedPrompt", language));
+    };
+
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("authFlow") === "signup") {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user) activateSignupCompletion(data.session);
+      });
+    }
+
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setAuthMode("reset");
         setError("");
-        setInfo("Digite uma nova senha para concluir a recuperacao da conta.");
+        setInfo(translate("auth.recoveryPrompt", language));
       }
 
       if (event === "SIGNED_IN" && typeof window !== "undefined") {
         const authFlow = new URLSearchParams(window.location.search).get("authFlow");
         if (authFlow === "signup") {
-          const pendingProfile = JSON.parse(window.localStorage.getItem(PENDING_SIGNUP_PROFILE_KEY) || "{}");
-          setEmail(session?.user?.email || pendingProfile.email || "");
-          setName(pendingProfile.name || session?.user?.email?.split("@")[0] || "");
-          setAuthMode("completeSignup");
-          setError("");
-          setInfo("Email confirmado. Crie sua senha para concluir o cadastro.");
+          activateSignupCompletion(session);
         }
       }
     });
 
     return () => listener.subscription?.unsubscribe();
-  }, []);
+  }, [language]);
 
   const resetFeedback = () => {
     setError("");
@@ -102,7 +116,7 @@ function Login() {
     }
 
     if (!isSupabaseConfigured) {
-      setError("Servico de autenticacao indisponivel. Tente novamente em instantes.");
+      setError(t("auth.unavailable"));
       return;
     }
 
@@ -116,7 +130,7 @@ function Login() {
           redirectTo: getRedirectUrl(),
         });
         if (resetError) throw resetError;
-        setInfo("Enviamos um link de recuperacao para o seu email.");
+        setInfo(t("auth.recoveryLinkSent"));
         return;
       }
 
@@ -136,17 +150,17 @@ function Login() {
           window.localStorage.setItem(PENDING_SIGNUP_PROFILE_KEY, JSON.stringify({ email: normalizedEmail, name: displayName }));
         }
         setPassword("");
-        setInfo("Enviamos um link de verificacao para o seu email.");
+        setInfo(t("auth.signupLinkSent"));
         return;
       }
 
       if (["reset", "completeSignup"].includes(authMode)) {
         if (newPassword.length < 6) {
-          setError("A nova senha precisa ter pelo menos 6 caracteres.");
+          setError(t("auth.passwordMin"));
           return;
         }
         if (newPassword !== confirmPassword) {
-          setError("As senhas nao conferem.");
+          setError(t("auth.passwordMismatch"));
           return;
         }
 
@@ -167,7 +181,7 @@ function Login() {
         setNewPassword("");
         setConfirmPassword("");
         setAuthMode("signin");
-        setInfo("Senha atualizada. Entre novamente com sua nova senha.");
+        setInfo(t("auth.passwordUpdated"));
         return;
       }
 
@@ -184,9 +198,9 @@ function Login() {
         return;
       }
 
-      setInfo("Verifique seu email para continuar.");
+      setInfo(t("auth.checkEmail"));
     } catch(err){
-      setError(err.message || "Nao foi possivel autenticar.");
+      setError(translateAuthError(err, language));
     } finally {
       setLoading(false);
     }
@@ -196,6 +210,9 @@ function Login() {
     <div className="absolute inset-0 bg-chat-background opacity-[0.04]" />
     <div className="absolute -top-24 right-24 h-[420px] w-[420px] rounded-full bg-icon-green/20 blur-3xl" />
     <div className="absolute -bottom-24 left-16 h-[360px] w-[360px] rounded-full bg-teal-light/10 blur-3xl" />
+    <div className="absolute right-6 top-6 z-20">
+      <LanguageSelector />
+    </div>
     <div className="relative z-10 grid md:grid-cols-[1.05fr_0.95fr] max-w-6xl w-full rounded-3xl overflow-hidden border border-conversation-border shadow-2xl bg-search-input-container-background/95">
       <div className="p-6 md:p-14 flex flex-col justify-between md:min-h-[620px]">
         <div>
@@ -204,31 +221,31 @@ function Login() {
               <Image src="/favicon.png" alt="ProjectChat" height={30} width={30} />
             </div>
             <div>
-              <div className="text-2xl font-semibold">ProjectChat</div>
-              <div className="text-secondary text-sm">Chat em tempo real</div>
+              <div className="text-2xl font-semibold">{t("common.projectChat")}</div>
+              <div className="text-secondary text-sm">{t("auth.tagline")}</div>
             </div>
           </div>
-          <h1 className="text-primary-strong text-4xl md:text-5xl font-light leading-tight mb-5">Comunicacao em tempo real para equipes.</h1>
+          <h1 className="text-primary-strong text-4xl md:text-5xl font-light leading-tight mb-5">{t("auth.heroTitle")}</h1>
           <p className="text-secondary text-lg leading-relaxed max-w-xl">
             {IS_DEMO_MODE
-              ? "Acesse um ambiente local para conhecer a experiencia do ProjectChat."
-              : "Acesse suas conversas, contatos e mensagens em um ambiente seguro e sincronizado."}
+              ? t("auth.heroDemoText")
+              : t("auth.heroText")}
           </p>
           <div className="grid sm:grid-cols-2 gap-3 mt-8">
             <div className="rounded-2xl bg-panel-header-background border border-conversation-border p-4">
               <BsWindowSidebar className="text-icon-green text-xl mb-3" />
-              <div className="text-primary-strong font-semibold">Conversas organizadas</div>
-              <div className="text-secondary text-sm mt-1">Contatos, busca, filtros e anexos em uma unica area de trabalho.</div>
+              <div className="text-primary-strong font-semibold">{t("auth.cardConversationsTitle")}</div>
+              <div className="text-secondary text-sm mt-1">{t("auth.cardConversationsText")}</div>
             </div>
             <div className="rounded-2xl bg-panel-header-background border border-conversation-border p-4">
               <BsShieldLockFill className="text-teal-light text-xl mb-3" />
-              <div className="text-primary-strong font-semibold">Acesso seguro</div>
-              <div className="text-secondary text-sm mt-1">Login por email e senha com sessao protegida.</div>
+              <div className="text-primary-strong font-semibold">{t("auth.cardSecureTitle")}</div>
+              <div className="text-secondary text-sm mt-1">{t("auth.cardSecureText")}</div>
             </div>
           </div>
         </div>
         <div className="text-secondary text-xs mt-8 md:mt-10">
-          Mensagens sincronizadas em tempo real entre usuarios autorizados.
+          {t("auth.realtimeNote")}
         </div>
       </div>
       <div className="bg-panel-header-background p-6 md:p-10 flex flex-col justify-center border-t md:border-t-0 md:border-l border-conversation-border">
@@ -236,15 +253,15 @@ function Login() {
           <div className="flex items-center gap-4 border-b border-conversation-border pb-5 mb-5">
             <Image src="/whatsapp.gif" alt="ProjectChat preview" height={96} width={96} />
             <div>
-              <div className="text-primary-strong text-xl font-semibold">ProjectChat Web</div>
-              <div className="text-secondary text-sm">Acesso profissional</div>
+              <div className="text-primary-strong text-xl font-semibold">{t("common.projectChatWeb")}</div>
+              <div className="text-secondary text-sm">{t("auth.accessProfessional")}</div>
             </div>
           </div>
           <form className="space-y-3 mt-6" onSubmit={handleLogin}>
             {!IS_DEMO_MODE && ["signup", "completeSignup"].includes(authMode) && (
               <input
                 className="bg-input-background text-white h-12 rounded-xl px-4 w-full focus:outline-none focus:ring-1 focus:ring-icon-green/60 placeholder:text-secondary"
-                placeholder="Seu nome"
+                placeholder={t("auth.namePlaceholder")}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
               />
@@ -253,7 +270,7 @@ function Login() {
               <>
                 <input
                   className="bg-input-background text-white h-12 rounded-xl px-4 w-full focus:outline-none focus:ring-1 focus:ring-icon-green/60 placeholder:text-secondary"
-                  placeholder="Email"
+                  placeholder={t("common.email")}
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -262,7 +279,7 @@ function Login() {
                 {authMode === "signin" && (
                   <input
                     className="bg-input-background text-white h-12 rounded-xl px-4 w-full focus:outline-none focus:ring-1 focus:ring-icon-green/60 placeholder:text-secondary"
-                    placeholder="Senha"
+                    placeholder={t("common.password")}
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
@@ -274,14 +291,14 @@ function Login() {
             )}
             {!IS_DEMO_MODE && authMode === "completeSignup" && email && (
               <div className="text-secondary text-sm bg-search-input-container-background rounded-xl px-4 py-3">
-                Email confirmado: <span className="text-primary-strong">{email}</span>
+                {t("auth.emailConfirmed")} <span className="text-primary-strong">{email}</span>
               </div>
             )}
             {!IS_DEMO_MODE && ["reset", "completeSignup"].includes(authMode) && (
               <>
                 <input
                   className="bg-input-background text-white h-12 rounded-xl px-4 w-full focus:outline-none focus:ring-1 focus:ring-icon-green/60 placeholder:text-secondary"
-                  placeholder="Nova senha"
+                  placeholder={t("auth.newPassword")}
                   type="password"
                   value={newPassword}
                   onChange={(event) => setNewPassword(event.target.value)}
@@ -290,7 +307,7 @@ function Login() {
                 />
                 <input
                   className="bg-input-background text-white h-12 rounded-xl px-4 w-full focus:outline-none focus:ring-1 focus:ring-icon-green/60 placeholder:text-secondary"
-                  placeholder="Confirmar nova senha"
+                  placeholder={t("auth.confirmNewPassword")}
                   type="password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
@@ -306,7 +323,7 @@ function Login() {
               type="submit"
               disabled={loading}
             >
-              <span>{IS_DEMO_MODE ? "Entrar no ProjectChat" : loading ? "Processando..." : authMode === "signup" ? "Enviar link de verificacao" : authMode === "forgot" ? "Enviar link" : authMode === "reset" ? "Atualizar senha" : authMode === "completeSignup" ? "Concluir cadastro" : "Entrar"}</span>
+              <span>{IS_DEMO_MODE ? t("auth.enterDemo") : loading ? t("common.processing") : authMode === "signup" ? t("auth.sendVerificationLink") : authMode === "forgot" ? t("auth.sendLink") : authMode === "reset" ? t("auth.updatePassword") : authMode === "completeSignup" ? t("auth.completeSignup") : t("auth.enter")}</span>
             </button>
           </form>
           {!IS_DEMO_MODE && (
@@ -314,16 +331,16 @@ function Login() {
               {authMode === "signin" && (
                 <>
                   <button type="button" className="text-secondary hover:text-primary-strong" onClick={() => { resetFeedback(); setAuthMode("forgot"); }}>
-                    Esqueci minha senha
+                    {t("auth.forgotPassword")}
                   </button>
                   <button type="button" className="text-secondary hover:text-primary-strong" onClick={() => { resetFeedback(); setAuthMode("signup"); }}>
-                    Criar uma nova conta
+                    {t("auth.createAccount")}
                   </button>
                 </>
               )}
               {authMode !== "signin" && (
                 <button type="button" className="text-secondary hover:text-primary-strong" onClick={goToSignin}>
-                  Voltar para entrar
+                  {t("auth.backToSignin")}
                 </button>
               )}
             </div>

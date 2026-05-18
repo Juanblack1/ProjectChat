@@ -1,6 +1,7 @@
 import { useStateProvider } from "@/context/StateContext";
 import { getAssetUrl } from "@/utils/AssetUrl";
 import { calculateTime } from "@/utils/CalculateTime";
+import { useI18n } from "@/utils/useI18n";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import MessageStatus from "../common/MessageStatus";
@@ -8,6 +9,7 @@ import ImageCanvasEditor from "./ImageCanvasEditor";
 
 function ImageMessage({ message }) {
   const [{currentChatUser, userInfo}] =  useStateProvider();
+  const { t } = useI18n();
   const imageUrl = getAssetUrl(message.message);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [localImage, setLocalImage] = useState("");
@@ -44,7 +46,7 @@ function ImageMessage({ message }) {
     <button type="button" className="relative block text-left" onClick={() => setViewerOpen(true)}>
       <Image src={displayUrl}
         className="rounded-lg object-cover max-h-[320px] max-w-[320px]"
-        alt="Imagem enviada"
+        alt={t("chat.imageAlt")}
         height={300}
         width={300}
         unoptimized={displayUrl.startsWith("data:") || displayUrl.startsWith("blob:")}
@@ -69,8 +71,8 @@ function ImageMessage({ message }) {
       <ImageCanvasEditor
         imageSrc={imageUrl}
         initialImageSrc={displayUrl}
-        title="Visualizar imagem"
-        confirmLabel="Salvar rabisco"
+        title={t("chat.viewImage")}
+        confirmLabel={t("chat.saveDrawing")}
         defaultDrawMode={false}
         onClose={() => setViewerOpen(false)}
         onConfirm={saveLocalAnnotation}

@@ -1,12 +1,14 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { FaCamera } from "react-icons/fa";
+import { useI18n } from "@/utils/useI18n";
 import CapturePhoto from "./CapturePhoto";
 import ContextMenu from "./ContextMenu";
 import PhotoLibrary from "./PhotoLibrary";
 import PhotoPicker from "./PhotoPicker";
 
 function Avatar({type,image, setImage}) {
+  const { t } = useI18n();
   const imageSrc = image || "/default_avatar.png";
   const canEdit = typeof setImage === "function";
   const [hover, setHover] = useState(false);
@@ -54,16 +56,16 @@ function Avatar({type,image, setImage}) {
   }, []);
 
   const contextMenuOptions = [
-    {name:"Tirar Foto",callback:()=>{
+    {name:t("profile.takePhoto"),callback:()=>{
       setShowCapturePhoto(true)
     }},
-    {name:"Escolher Da Biblioteca",callback:()=>{
+    {name:t("profile.chooseLibrary"),callback:()=>{
       setShowPhotoLibrary(true)
     }},
-    {name:"Enviar Foto",callback:()=>{
+    {name:t("profile.uploadPhoto"),callback:()=>{
       setGrabPhoto(true);
     }},
-    {name:"Remover Foto",callback:()=>{
+    {name:t("profile.removePhoto"),callback:()=>{
       setImage('/default_avatar.png')
     }},
   ]
@@ -117,7 +119,7 @@ function Avatar({type,image, setImage}) {
               <span
               id="context-opener"
               onClick={e=>showContextMenu(e)}
-              >Altere sua foto de perfil</span>
+              >{t("profile.changePhoto")}</span>
             </div>}
             <div className="relative flex items-center justify-center h-60 w-60">
             <Image src={imageSrc} alt="avatar" className="rounded-full" fill sizes="240px" />

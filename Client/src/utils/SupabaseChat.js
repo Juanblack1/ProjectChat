@@ -1,7 +1,9 @@
 import { supabase } from "./SupabaseConfig";
+import { DEFAULT_LANGUAGE, formatPresence } from "./I18n";
 
 const DEFAULT_AVATAR = "/default_avatar.png";
 const ONLINE_WINDOW_MS = 90 * 1000;
+const DEFAULT_ABOUT_VALUES = new Set(["disponivel", "available"]);
 
 const getLastSeenDate = (lastSeen) => {
   if (!lastSeen) return null;
@@ -14,21 +16,9 @@ export const isProfileOnline = (lastSeen) => {
   return date ? Date.now() - date.getTime() <= ONLINE_WINDOW_MS : false;
 };
 
-export const formatPresence = (lastSeen) => {
-  const date = getLastSeenDate(lastSeen);
-  if (!date) return "offline";
-
-  const diffMs = Date.now() - date.getTime();
-  if (diffMs <= ONLINE_WINDOW_MS) return "online";
-  if (diffMs < 5 * 60 * 1000) return "visto agora";
-  if (diffMs < 60 * 60 * 1000) return `visto ha ${Math.floor(diffMs / 60000)} min`;
-
-  const today = new Date();
-  const isToday = date.toDateString() === today.toDateString();
-  const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-
-  if (isToday) return `visto hoje as ${time}`;
-  return `visto em ${date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} as ${time}`;
+const normalizeAbout = (about) => {
+  const value = about?.trim() || "";
+  return DEFAULT_ABOUT_VALUES.has(value.toLowerCase()) ? "" : value;
 };
 
 export const mapProfileToUser = (profile) => ({
@@ -37,10 +27,10 @@ export const mapProfileToUser = (profile) => ({
   name: profile.name,
   profileImage: profile.profile_picture || DEFAULT_AVATAR,
   profilePicture: profile.profile_picture || DEFAULT_AVATAR,
-  status: profile.about || "Disponivel",
-  about: profile.about || "Disponivel",
+  status: normalizeAbout(profile.about),
+  about: normalizeAbout(profile.about),
   lastSeenAt: profile.last_seen,
-  lastSeen: formatPresence(profile.last_seen),
+  lastSeen: formatPresence(profile.last_seen, DEFAULT_LANGUAGE),
   isOnline: isProfileOnline(profile.last_seen),
 });
 
@@ -80,9 +70,9 @@ export const ensureProfile = async (authUser, overrides = {}) => {
   const profile = {
     id: authUser.id,
     email: authUser.email,
-    name: overrides.name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "Usuario",
+    name: overrides.name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "ProjectChat user",
     profile_picture: overrides.profileImage || authUser.user_metadata?.avatar_url || DEFAULT_AVATAR,
-    about: overrides.status || "Disponivel",
+    about: normalizeAbout(overrides.status),
     last_seen: new Date().toISOString(),
   };
 
@@ -103,7 +93,7 @@ export const updateProfile = async (userId, profile) => {
     .from("profiles")
     .update({
       name: profile.name,
-      about: profile.status,
+      about: normalizeAbout(profile.status),
       profile_picture: profile.profileImage,
       last_seen: new Date().toISOString(),
     })

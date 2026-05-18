@@ -1,7 +1,7 @@
 export const DEMO_USER = {
   id: 1,
   name: "Voce",
-  email: "demo@projectchat.local",
+  email: "voce@projectchat.local",
   profileImage: "/default_avatar.png",
   status: "Disponivel no ProjectChat Web",
 };
@@ -126,7 +126,7 @@ export const DEMO_CONTACTS = [
     name: "Rafa Comercial",
     email: "rafa@projectchat.local",
     profilePicture: "/avatars/9.png",
-    about: "Demos e propostas",
+    about: "Apresentacoes e propostas",
     lastSeen: "online",
     isOnline: true,
     isTyping: false,
@@ -187,14 +187,14 @@ export const DEMO_CONTACT_GROUPS = groupContacts(DEMO_CONTACTS);
 
 const DEMO_CONVERSATIONS = {
   2: [
-    {id: "2-01", senderId: 2, recieverId: DEMO_USER.id, type: "text", message: "Bom dia! Atualizei o roteiro da demo publica.", messageStatus: "read", createdAt: hoursAgo(3)},
-    {id: "2-02", senderId: DEMO_USER.id, recieverId: 2, type: "text", message: "Otimo. Quero que pareca um produto real, mas sem backend privado.", messageStatus: "read", createdAt: hoursAgo(2.8)},
+    {id: "2-01", senderId: 2, recieverId: DEMO_USER.id, type: "text", message: "Bom dia! Atualizei o roteiro da apresentacao publica.", messageStatus: "read", createdAt: hoursAgo(3)},
+    {id: "2-02", senderId: DEMO_USER.id, recieverId: 2, type: "text", message: "Otimo. Quero que pareca um produto real, mas sem expor detalhes internos.", messageStatus: "read", createdAt: hoursAgo(2.8)},
     {id: "2-03", senderId: 2, recieverId: DEMO_USER.id, type: "text", message: "Fechado. Coloquei contatos, historico, busca e perfil local.", messageStatus: "read", createdAt: minutesAgo(37)},
     {id: "2-04", senderId: 2, recieverId: DEMO_USER.id, type: "text", message: "Tambem deixei o aviso de seguranca bem discreto.", messageStatus: "delivered", createdAt: minutesAgo(8)},
   ],
   3: [
     {id: "3-01", senderId: 3, recieverId: DEMO_USER.id, type: "text", message: "Recebemos dois relatos sobre upload de imagem.", messageStatus: "read", createdAt: daysAgo(1, 10, 12)},
-    {id: "3-02", senderId: DEMO_USER.id, recieverId: 3, type: "text", message: "Na demo publica ele fica local no navegador, certo?", messageStatus: "read", createdAt: daysAgo(1, 10, 18)},
+    {id: "3-02", senderId: DEMO_USER.id, recieverId: 3, type: "text", message: "No ambiente publico ele fica local no navegador, certo?", messageStatus: "read", createdAt: daysAgo(1, 10, 18)},
     {id: "3-03", senderId: 3, recieverId: DEMO_USER.id, type: "text", message: "Sim. Sem servidor e sem expor arquivos reais.", messageStatus: "read", createdAt: daysAgo(1, 10, 21)},
   ],
   4: [
@@ -210,10 +210,10 @@ const DEMO_CONVERSATIONS = {
   ],
   6: [
     {id: "6-01", senderId: 6, recieverId: DEMO_USER.id, type: "text", message: "A Vercel esta servindo apenas o client Next.js.", messageStatus: "read", createdAt: daysAgo(2, 22, 18)},
-    {id: "6-02", senderId: DEMO_USER.id, recieverId: 6, type: "text", message: "Perfeito. O backend real fica fora da demo publica por enquanto.", messageStatus: "read", createdAt: daysAgo(2, 22, 24)},
+    {id: "6-02", senderId: DEMO_USER.id, recieverId: 6, type: "text", message: "Perfeito. Dados sensiveis ficam fora do ambiente publico.", messageStatus: "read", createdAt: daysAgo(2, 22, 24)},
   ],
   7: [
-    {id: "7-01", senderId: 7, recieverId: DEMO_USER.id, type: "text", message: "Gostei do teste. Da para ver como ficaria uma conversa real.", messageStatus: "read", createdAt: daysAgo(3, 15, 40)},
+    {id: "7-01", senderId: 7, recieverId: DEMO_USER.id, type: "text", message: "Gostei da experiencia. Da para ver como ficaria uma conversa real.", messageStatus: "read", createdAt: daysAgo(3, 15, 40)},
     {id: "7-02", senderId: DEMO_USER.id, recieverId: 7, type: "text", message: "Essa e a ideia: uma vitrine segura do produto.", messageStatus: "read", createdAt: daysAgo(3, 15, 43)},
   ],
   8: [
@@ -221,7 +221,7 @@ const DEMO_CONVERSATIONS = {
     {id: "8-02", senderId: 8, recieverId: DEMO_USER.id, type: "text", message: "Carla: Vamos manter o visual escuro e denso.", messageStatus: "read", createdAt: daysAgo(1, 17, 19)},
   ],
   9: [
-    {id: "9-01", senderId: 9, recieverId: DEMO_USER.id, type: "text", message: "Tenho uma apresentacao hoje. Posso usar o link da demo?", messageStatus: "read", createdAt: minutesAgo(29)},
+    {id: "9-01", senderId: 9, recieverId: DEMO_USER.id, type: "text", message: "Tenho uma apresentacao hoje. Posso usar o link publico?", messageStatus: "read", createdAt: minutesAgo(29)},
     {id: "9-02", senderId: DEMO_USER.id, recieverId: 9, type: "text", message: "Pode sim. Ele nao pede conta real e nao salva nada no servidor.", messageStatus: "read", createdAt: minutesAgo(24)},
     {id: "9-03", senderId: 9, recieverId: DEMO_USER.id, type: "text", message: "Excelente. Assim consigo mostrar o produto sem risco.", messageStatus: "delivered", createdAt: minutesAgo(12)},
   ],
@@ -242,7 +242,7 @@ export const getDemoMessages = (contactId) => DEMO_CONVERSATIONS[contactId] || [
     senderId: DEMO_USER.id,
     recieverId: contactId,
     type: "text",
-    message: "Perfeito. A demo publica segue segura e sem dados reais.",
+    message: "Perfeito. O ambiente publico segue seguro e sem dados reais.",
     messageStatus: "read",
     createdAt: minutesAgo(8),
   },
