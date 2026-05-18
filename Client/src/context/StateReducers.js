@@ -39,12 +39,10 @@ const reducer = (state,action) => {
                 ...state,
                 messages: action.messages,
             }
-        case reducerCases.SET_SOCKET:
-            return {
-                ...state,
-                socket:action.socket,
-            }
         case reducerCases.ADD_MESSAGE:
+            if (state.messages.some((message) => message.id === action.newMessage.id)) {
+                return state;
+            }
             return {
                 ...state,
                 messages:[...state.messages, action.newMessage],

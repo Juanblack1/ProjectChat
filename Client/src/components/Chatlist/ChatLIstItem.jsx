@@ -1,5 +1,6 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { getDemoConversationPreview } from "@/utils/DemoData";
 import Avatar from "../common/Avatar";
 import MessageStatus from "../common/MessageStatus";
@@ -7,8 +8,13 @@ import MessageStatus from "../common/MessageStatus";
 function ChatLIstItem({data, isContactsPage = false}) {
   const[{currentChatUser}, dispatch] = useStateProvider()
   const isActive = currentChatUser?.id === data?.id;
-  const preview = getDemoConversationPreview(data);
-  const unreadCount = isActive ? 0 : data?.unreadCount;
+  const preview = IS_DEMO_MODE ? getDemoConversationPreview(data) : {
+    text: data?.type === "image" ? "Foto" : data?.type === "audio" ? "Audio" : data?.message,
+    createdAt: data?.createdAt,
+    messageStatus: data?.messageStatus,
+    fromSelf: data?.senderId && data?.senderId !== data?.id,
+  };
+  const unreadCount = isActive ? 0 : (data?.unreadCount || data?.totalUnreadMessages || 0);
   const previewTime = preview.createdAt
     ? new Date(preview.createdAt).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"})
     : "";
@@ -41,7 +47,7 @@ function ChatLIstItem({data, isContactsPage = false}) {
         <div className="flex items-center gap-1 min-w-0">
           {preview.fromSelf && <MessageStatus messageStatus={preview.messageStatus} />}
           <span className={`line-clamp-1 text-sm ${unreadCount ? "text-primary-strong font-medium" : "text-secondary"}`}>
-            {data?.isTyping ? "digitando..." : preview.text || data?.about || "\u00A0"}
+            {data?.isTyping ? "digitando..." : preview.text || data?.about || "Sem mensagens ainda"}
           </span>
         </div>
         <div className="flex items-center gap-2 min-w-fit">

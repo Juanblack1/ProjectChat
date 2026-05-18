@@ -1,14 +1,11 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
-import { CHECK_USER_ROUTE, GET_MESSAGE_ROUTE, HOST } from "@/utils/ApiRoutes";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { getDemoConversation, getDemoProfile, hasDemoSession } from "@/utils/DemoData";
-import { firebaseAuth } from "@/utils/FirebaseConfig";
-import axios from "axios";
-import { onAuthStateChanged } from "firebase/auth";
+import { supabase } from "@/utils/SupabaseConfig";
+import { ensureProfile, getConversationMessages, markConversationRead, subscribeToMessages } from "@/utils/SupabaseChat";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
+import { useEffect, useState } from "react";
 import Chat from "./Chat/Chat";
 import SearchMessages from "./Chat/SearchMessages";
 import ChatList from "./Chatlist/ChatList";
@@ -18,82 +15,83 @@ function Main() {
   const router = useRouter();
   const [{userInfo, currentChatUser, messagesSearch}, dispatch] = useStateProvider()
   const [redirectLogin, setRedirectLogin] = useState(false);
-  const [demoChecked, setDemoChecked] = useState(!IS_DEMO_MODE);
-  const [socketEvent, setSocketEvent] = useState(false);
-  const socket = useRef();
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     if(redirectLogin) router.push("/login")
-  }, [redirectLogin])
+  }, [redirectLogin, router])
 
   useEffect(() => {
+    let active = true;
+
+    const loadAuth = async () => {
     if (IS_DEMO_MODE) {
       if (!hasDemoSession()) {
         setRedirectLogin(true);
+        setAuthChecked(true);
         return;
       }
 
-      if (!userInfo) {
-        dispatch({ type: reducerCases.SET_USER_INFO, userInfo: getDemoProfile() });
-      }
-      setDemoChecked(true);
+      dispatch({ type: reducerCases.SET_USER_INFO, userInfo: getDemoProfile() });
+      setAuthChecked(true);
       return;
     }
 
-    if (!firebaseAuth) {
+    if (!supabase) {
       setRedirectLogin(true);
+      setAuthChecked(true);
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(firebaseAuth, async(currentUser)=> {
-      if(!currentUser) setRedirectLogin(true)
-      if(!userInfo && currentUser?.email){
-        const {data} = await axios.post(CHECK_USER_ROUTE, {
-          email:currentUser.email
-        })
-        if(data?.data){
-          if(!data.status) {
-            router.push("/login")
-          }
-          else {
-            const {id,name,email,profilePicture:profileImage, status} = data.data;
-            dispatch({
-              type:reducerCases.SET_USER_INFO,
-              userInfo:{
-                id, name, email, profileImage, status
-              }
-            })
-          }
-        }
+      const { data } = await supabase.auth.getSession();
+      if (!active) return;
+
+      if (!data.session?.user) {
+        setRedirectLogin(true);
+        setAuthChecked(true);
+        return;
       }
-    })
 
-    return unsubscribe;
-  }, [dispatch, router, userInfo]);
+      try {
+        const profile = await ensureProfile(data.session.user);
+        if (!active) return;
+        dispatch({ type: reducerCases.SET_USER_INFO, userInfo: profile });
+      } catch (error) {
+        console.error(error);
+        setRedirectLogin(true);
+      } finally {
+        if (active) setAuthChecked(true);
+      }
+    };
 
-  useEffect(() => {
-    if(userInfo && !IS_DEMO_MODE) {
-      socket.current = io(HOST);
-      socket.current.emit("add-user", userInfo.id);
-      dispatch({type:reducerCases.SET_SOCKET, socket})
+    loadAuth();
+
+    if (!IS_DEMO_MODE && supabase) {
+      const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        if (!session?.user) {
+          dispatch({type: reducerCases.SET_USER_INFO, userInfo: undefined});
+          router.push("/login");
+          return;
+        }
+
+        const profile = await ensureProfile(session.user);
+        dispatch({ type: reducerCases.SET_USER_INFO, userInfo: profile });
+      });
+
+      return () => {
+        active = false;
+        listener.subscription?.unsubscribe();
+      };
     }
-  }, [userInfo]);
+
+    return () => {
+      active = false;
+    };
+  }, [dispatch, router]);
 
   useEffect(() => {
-    if(socket.current && !socketEvent) {
-      socket.current.on("msg-recieve", (data) => {
-        dispatch({
-          type:reducerCases.ADD_MESSAGE, 
-          newMessage:{
-            ...data.message,
-          }
-        })
-      })
-      setSocketEvent(true)
-    }
-  }, [socket.current])
+    let unsubscribe = () => {};
 
-  useEffect(() => {
     const getMessages = async () => {
       if (IS_DEMO_MODE) {
         dispatch({
@@ -102,17 +100,26 @@ function Main() {
         });
         return;
       }
-      const {data:{messages}} = await axios.get(`${GET_MESSAGE_ROUTE}/${userInfo.id}/${currentChatUser.id}`)
+
+      const messages = await getConversationMessages(userInfo.id, currentChatUser.id);
       dispatch({
         type:reducerCases.SET_MESSAGES, messages
-      })
-    };
-    if(currentChatUser?.id){
-      getMessages()
-    }
-  }, [currentChatUser])
+      });
+      await markConversationRead(userInfo.id, currentChatUser.id);
 
-  if (IS_DEMO_MODE && !demoChecked) {
+      unsubscribe = subscribeToMessages(userInfo.id, currentChatUser.id, (newMessage) => {
+        dispatch({type: reducerCases.ADD_MESSAGE, newMessage});
+      });
+    };
+
+    if(currentChatUser?.id && userInfo?.id){
+      getMessages();
+    }
+
+    return () => unsubscribe();
+  }, [currentChatUser?.id, dispatch, userInfo?.id])
+
+  if (!authChecked) {
     return <div className="h-screen w-screen bg-search-input-container-background" />;
   }
 

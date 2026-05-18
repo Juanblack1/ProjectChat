@@ -1,9 +1,8 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
-import { GET_ALL_CONTACTS } from "@/utils/ApiRoutes";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { DEMO_CONTACT_GROUPS } from "@/utils/DemoData";
-import axios from "axios";
+import { getContacts, subscribeToProfiles } from "@/utils/SupabaseChat";
 import { useEffect, useState } from "react";
 import { BiArrowBack, BiSearchAlt2 } from "react-icons/bi";
 import ChatLIstItem from "./ChatLIstItem";
@@ -11,7 +10,7 @@ import ChatLIstItem from "./ChatLIstItem";
 function ContactsList() {
   const [allContacts, setAllContacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [{}, dispatch] = useStateProvider();
+  const [{userInfo}, dispatch] = useStateProvider();
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const visibleContacts = Object.entries(allContacts).reduce((groups, [initialLetter, userList]) => {
     const contacts = normalizedSearch
@@ -31,18 +30,20 @@ function ContactsList() {
       return;
     }
 
-    const getContacts = async () => {
-    try{
-        const {
-          data:{users},
-        } = await axios.get(GET_ALL_CONTACTS);
-        setAllContacts(users);
-      } catch (err) {
-        console.log(err)
-      }
+    const loadContacts = async () => {
+      if (!userInfo?.id) return;
+      const contacts = await getContacts(userInfo.id);
+      const groupedContacts = contacts.reduce((groups, contact) => {
+        const initial = contact.name.charAt(0).toUpperCase();
+        groups[initial] = [...(groups[initial] || []), contact];
+        return groups;
+      }, {});
+      setAllContacts(groupedContacts);
     };
-      getContacts();
-  }, [])
+    loadContacts();
+    const unsubscribe = subscribeToProfiles(loadContacts);
+    return () => unsubscribe();
+  }, [userInfo?.id])
 
   return (
   <div className="h-full flex flex-col bg-search-input-container-background">
@@ -55,7 +56,7 @@ function ContactsList() {
         />
         <div>
           <div className="text-lg font-semibold">Nova conversa</div>
-          <div className="text-xs text-secondary">{Object.values(DEMO_CONTACT_GROUPS).flat().length} contatos disponiveis</div>
+          <div className="text-xs text-secondary">{Object.values(allContacts).flat().length} contatos disponiveis</div>
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ export default function App({ Component, pageProps }) {
     <StateProvider initialState={initialState} reducer={reducer}>
       <Head>
         <title>ProjectChat Web</title>
-        <meta name="description" content="ProjectChat public demo" />
+        <meta name="description" content="ProjectChat real-time chat" />
         <link rel="shortcut icon" href="/favicon.png"/>
       </Head>
       <Component {...pageProps} />

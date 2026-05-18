@@ -1,17 +1,16 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
-import { ADD_AUDIO_MESSAGE_ROUTE } from "@/utils/ApiRoutes";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { addDemoMessage, createDemoMessage, readFileAsDataUrl } from "@/utils/DemoData";
-import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { sendMessage as sendSupabaseMessage } from "@/utils/SupabaseChat";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FaMicrophone, FaPauseCircle, FaPlay, FaStop, FaTrash } from "react-icons/fa";
 import { MdSend } from "react-icons/md";
 import WaveSurfer from "wavesurfer.js";
 
 function CaptureAudio({hide}) {
 
-  const [{userInfo, currentChatUser,socket}, dispatch] = useStateProvider();
+  const [{userInfo, currentChatUser}, dispatch] = useStateProvider();
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState(null);
@@ -45,60 +44,7 @@ function CaptureAudio({hide}) {
     };
   }, [isRecording]);
 
-  useEffect(() => {
-    const wavesurfer = WaveSurfer.create({
-      container: waveFormRef.current,
-      waveColor:"#ccc",
-      progressColor: "#4a9eff",
-      cursorColor: "#7ae3c3",
-      barWidth: 2,
-      height: 30,
-      responsive: true
-    });
-    setWaveForm(wavesurfer)
-
-    wavesurfer.on("finish", () => {
-      setIsPlaying(false)
-  });
-
-    return () => {
-      wavesurfer.destroy()
-    };
-  }, []);
-
-  useEffect(() => {
-    if(waveForm) handleStartRecording();
-  }, [waveForm])
-
-  useEffect(() => {
-    if (recordedAudio) {
-      const updatePlaybackTime = () => {
-        setCurrentPlaybackTime(recordedAudio.currentTime)
-      };
-      recordedAudio.addEventListener("timeupdate", updatePlaybackTime);
-      return () => {
-        recordedAudio.removeEventListener("timeupdate", updatePlaybackTime);
-      };
-    }
-  }, [recordedAudio]);
-
-  const handlePlayRecording = () => {
-    if (recordedAudio) {
-      waveForm.stop();
-      waveForm.play();
-      recordedAudio.play();
-      setIsPlaying(true);
-    }
-  };
-
-  const handlePauseRecording = () => {
-    waveForm.stop();
-    recordedAudio.pause();
-    setIsPlaying(false);
-  };
-  
-  const handleStartRecording = () => {
-    
+  const handleStartRecording = useCallback(() => {
     setRecordingDuration(0);
     setCurrentPlaybackTime(0);
     setTotalDuration(0);
@@ -130,6 +76,58 @@ function CaptureAudio({hide}) {
       setRecordingError("Permita o uso do microfone para gravar audio.");
       setIsRecording(false);
     });
+  }, [waveForm]);
+
+  useEffect(() => {
+    const wavesurfer = WaveSurfer.create({
+      container: waveFormRef.current,
+      waveColor:"#ccc",
+      progressColor: "#4a9eff",
+      cursorColor: "#7ae3c3",
+      barWidth: 2,
+      height: 30,
+      responsive: true
+    });
+    setWaveForm(wavesurfer)
+
+    wavesurfer.on("finish", () => {
+      setIsPlaying(false)
+  });
+
+    return () => {
+      wavesurfer.destroy()
+    };
+  }, []);
+
+  useEffect(() => {
+    if(waveForm) handleStartRecording();
+  }, [handleStartRecording, waveForm])
+
+  useEffect(() => {
+    if (recordedAudio) {
+      const updatePlaybackTime = () => {
+        setCurrentPlaybackTime(recordedAudio.currentTime)
+      };
+      recordedAudio.addEventListener("timeupdate", updatePlaybackTime);
+      return () => {
+        recordedAudio.removeEventListener("timeupdate", updatePlaybackTime);
+      };
+    }
+  }, [recordedAudio]);
+
+  const handlePlayRecording = () => {
+    if (recordedAudio) {
+      waveForm.stop();
+      waveForm.play();
+      recordedAudio.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const handlePauseRecording = () => {
+    waveForm.stop();
+    recordedAudio.pause();
+    setIsPlaying(false);
   };
   
   const handleStopRecording = () => {
@@ -161,28 +159,17 @@ function CaptureAudio({hide}) {
         return;
       }
 
-      const formData = new FormData();
-      formData.append("audio", renderedAudio);
-      const response = await axios.post(ADD_AUDIO_MESSAGE_ROUTE, formData, {
-        headers:{
-          "Content-Type": "multipart/form-data"
-        },
-        params:{
-          from: userInfo.id,
-          to:currentChatUser.id
-        },
+      const audioUrl = await readFileAsDataUrl(renderedAudio);
+      const newMessage = await sendSupabaseMessage({
+        from: userInfo?.id,
+        to: currentChatUser?.id,
+        message: audioUrl,
+        type: "audio",
       });
-      if(response.status === 201) {
-        socket.current?.emit("send-msg", {
-          to: currentChatUser?.id,
-          from:userInfo?.id,
-          message: response.data.message,
-        });
+      if(newMessage) {
         dispatch({
           type: reducerCases.ADD_MESSAGE,
-          newMessage:{
-            ...response.data.message
-          },
+          newMessage,
           fromSelf: true,
         });
       }

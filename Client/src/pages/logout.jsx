@@ -1,8 +1,8 @@
 import { useStateProvider } from "@/context/StateContext";
 import { reducerCases } from "@/context/constants";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { clearDemoData, endDemoSession } from "@/utils/DemoData";
-import { firebaseAuth } from "@/utils/FirebaseConfig";
-import { signOut } from "firebase/auth";
+import { supabase } from "@/utils/SupabaseConfig";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 
@@ -12,11 +12,11 @@ function Logout() {
 
   useEffect(() => {
     const logout = async () => {
-      clearDemoData();
-      endDemoSession();
-
-      if (firebaseAuth) {
-        await signOut(firebaseAuth);
+      if (IS_DEMO_MODE) {
+        clearDemoData();
+        endDemoSession();
+      } else if (supabase) {
+        await supabase.auth.signOut();
       }
 
       dispatch({type: reducerCases.SET_USER_INFO, userInfo: undefined});

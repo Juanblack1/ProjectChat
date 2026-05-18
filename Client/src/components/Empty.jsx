@@ -13,13 +13,13 @@ function Empty() {
         </div>
         <h1 className="text-primary-strong text-4xl font-light mb-3">ProjectChat Web</h1>
         <p className="text-secondary text-base leading-relaxed max-w-[560px]">
-          Envie mensagens, pesquise conversas, personalize seu perfil e teste anexos em uma demo publica segura. Escolha uma conversa para comecar.
+          Selecione uma conversa para visualizar mensagens, responder contatos e acompanhar novas atualizacoes.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-8 w-full">
           <div className="bg-panel-header-background/85 border border-conversation-border rounded-xl px-4 py-4 text-left">
             <BsLockFill className="text-icon-green mb-3" />
-            <div className="text-primary-strong text-sm font-semibold">Demo segura</div>
-            <div className="text-secondary text-xs mt-1">Dados apenas no navegador</div>
+            <div className="text-primary-strong text-sm font-semibold">Acesso seguro</div>
+            <div className="text-secondary text-xs mt-1">Sessao protegida</div>
           </div>
           <div className="bg-panel-header-background/85 border border-conversation-border rounded-xl px-4 py-4 text-left">
             <BsCheck2All className="text-icon-ack mb-3 text-lg" />
@@ -28,11 +28,11 @@ function Empty() {
           </div>
           <div className="bg-panel-header-background/85 border border-conversation-border rounded-xl px-4 py-4 text-left">
             <BsPhone className="text-teal-light mb-3" />
-            <div className="text-primary-strong text-sm font-semibold">Pronto para demo</div>
-            <div className="text-secondary text-xs mt-1">Sem login externo</div>
+            <div className="text-primary-strong text-sm font-semibold">Contatos ativos</div>
+            <div className="text-secondary text-xs mt-1">Lista sincronizada</div>
           </div>
         </div>
-        <div className="text-secondary text-xs mt-8">Criptografia e chamadas reais dependem do backend de producao.</div>
+        <div className="text-secondary text-xs mt-8">Suas conversas permanecem disponiveis em tempo real.</div>
       </div>
     </div>
   );

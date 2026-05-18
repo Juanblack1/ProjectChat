@@ -5,14 +5,11 @@ import { saveDemoConversation } from "@/utils/DemoData";
 import { useState } from "react";
 import { BiArrowBack, BiSearchAlt2 } from "react-icons/bi";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { IoVideocam } from "react-icons/io5";
-import { MdCall } from "react-icons/md";
 import Avatar from "../common/Avatar";
 import ContextMenu from "../common/ContextMenu";
 
 function ChatHeader() {
   const [{ currentChatUser, messagesSearch }, dispatch] = useStateProvider();
-  const [activeCall, setActiveCall] = useState(null);
   const [isContextMenuVisible, setIsContextMenuVisible] = useState(false);
   const [contextMenuCordinates, setContextMenuCordinates] = useState({x: 0, y: 0});
   const contactStatus = currentChatUser?.isTyping
@@ -60,16 +57,6 @@ function ChatHeader() {
       {currentChatUser?.label && <span className="hidden md:inline-flex text-[10px] uppercase tracking-wide text-teal-light border border-teal-light/30 rounded-full px-2 py-0.5">{currentChatUser.label}</span>}
     </div>
     <div className="flex gap-6 min-w-fit">
-      <MdCall  
-      className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-      title="Voice call"
-      onClick={() => setActiveCall("voice")}
-      />
-      <IoVideocam
-      className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-      title="Video call"
-      onClick={() => setActiveCall("video")}
-      />
       <BiSearchAlt2
       className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
       title="Search messages"
@@ -89,28 +76,6 @@ function ChatHeader() {
     contextMenu={isContextMenuVisible}
     setContextMenu={setIsContextMenuVisible}
   />}
-  {activeCall && (
-    <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center text-white">
-      <div className="bg-panel-header-background rounded-2xl p-8 w-[360px] flex flex-col items-center gap-5 shadow-2xl">
-        <Avatar type="xl" image={currentChatUser?.profilePicture} />
-        <div className="text-center">
-          <div className="text-2xl font-semibold">{currentChatUser?.name}</div>
-          <div className="text-secondary mt-1">
-            {activeCall === "voice" ? "Chamada de voz demo" : "Chamada de video demo"}
-          </div>
-          <div className="text-secondary text-sm mt-3">
-            O backend de chamada ainda nao esta conectado nesta demo publica.
-          </div>
-        </div>
-        <button
-          className="bg-red-600 hover:bg-red-700 rounded-full px-6 py-3"
-          onClick={() => setActiveCall(null)}
-        >
-          Encerrar
-        </button>
-      </div>
-    </div>
-  )}
   </>
   );
 }

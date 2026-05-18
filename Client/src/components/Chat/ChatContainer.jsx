@@ -1,4 +1,5 @@
 import { useStateProvider } from "@/context/StateContext";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { calculateTime } from "@/utils/CalculateTime";
 import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
@@ -27,13 +28,15 @@ function ChatContainer() {
           Hoje
         </div>
         <div className="mx-auto mb-6 rounded-lg bg-[#182229]/95 text-secondary text-xs px-4 py-3 max-w-[560px] text-center shadow-lg border border-conversation-border">
-          As mensagens desta demo ficam somente neste navegador. Chamadas reais e sincronizacao entre usuarios dependem do backend de producao.
+          {IS_DEMO_MODE
+            ? "Ambiente local ativo. As conversas ficam neste navegador."
+            : "Mensagens sincronizadas em tempo real entre os participantes."}
         </div>
         <div className="flex w-full">
           <div className="flex flex-col justify-end w-full gap-2 overflow-auto">
             {messages.length === 0 && (
               <div className="mx-auto text-center text-secondary bg-panel-header-background/80 rounded-xl px-6 py-5 border border-conversation-border max-w-[420px]">
-                Conversa limpa. Envie uma nova mensagem para continuar o teste.
+                Nenhuma mensagem ainda. Envie a primeira mensagem para iniciar a conversa.
               </div>
             )}
             {

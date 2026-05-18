@@ -1,9 +1,8 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
-import { ADD_IMAGE_MESSAGE_ROUTE, ADD_MESSAGE_ROUTE } from "@/utils/ApiRoutes";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { addDemoMessage, createDemoMessage, readFileAsDataUrl } from "@/utils/DemoData";
-import axios from "axios";
+import { sendMessage as sendSupabaseMessage } from "@/utils/SupabaseChat";
 import EmojiPicker from "emoji-picker-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
@@ -17,7 +16,7 @@ const CaptureAudio = dynamic(() => import("../common/CaptureAudio"),{ssr:false})
 
 
 function MessageBar() {
-  const [{userInfo,currentChatUser, socket}, dispatch] = useStateProvider();
+  const [{userInfo,currentChatUser}, dispatch] = useStateProvider();
   const [message, setMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef(null);
@@ -78,23 +77,18 @@ function MessageBar() {
         return;
       }
 
-      const {data} = await axios.post(ADD_MESSAGE_ROUTE, {
+      const newMessage = await sendSupabaseMessage({
+        from: userInfo?.id,
         to: currentChatUser?.id,
-        from:userInfo?.id,
-        message: trimmedMessage
+        message: trimmedMessage,
       });
-      socket.current?.emit("send-msg", {
-        to: currentChatUser?.id,
-        from:userInfo?.id,
-        message: data.message,
-      });
-      dispatch({
-        type: reducerCases.ADD_MESSAGE,
-        newMessage:{
-          ...data.message
-        },
-        fromSelf: true,
-      });
+      if (newMessage) {
+        dispatch({
+          type: reducerCases.ADD_MESSAGE,
+          newMessage,
+          fromSelf: true,
+        });
+      }
       setMessage("")
     } catch (err) {
       console.log(err)
@@ -135,31 +129,21 @@ function MessageBar() {
         return;
       }
 
-      const formData = new FormData();
-      formData.append("image", file);
-      const response = await axios.post(ADD_IMAGE_MESSAGE_ROUTE, formData, {
-        headers:{
-          "Content-Type": "multipart/form-data"
-        },
-        params:{
-          from: userInfo.id,
-          to:currentChatUser.id
-        },
+      const imageUrl = await readFileAsDataUrl(file);
+      const newMessage = await sendSupabaseMessage({
+        from: userInfo?.id,
+        to: currentChatUser?.id,
+        message: imageUrl,
+        type: "image",
       });
-      if(response.status === 201) {
-        socket.current.emit("send-msg", {
-          to: currentChatUser?.id,
-          from:userInfo?.id,
-          message: response.data.message,
-        });
+      if(newMessage) {
         dispatch({
           type: reducerCases.ADD_MESSAGE,
-          newMessage:{
-            ...response.data.message
-          },
+          newMessage,
           fromSelf: true,
         });
       }
+      setGrabPhoto(false);
     } catch(err){
       console.log(err)
     }

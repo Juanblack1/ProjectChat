@@ -1,6 +1,8 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
+import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { clearDemoData, endDemoSession, getDemoConversation, getDemoProfile } from "@/utils/DemoData";
+import { supabase } from "@/utils/SupabaseConfig";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { BsFillChatLeftTextFill, BsThreeDotsVertical } from "react-icons/bs";
@@ -27,9 +29,14 @@ function ChatListHeader() {
     setIsContextMenuVisible(true);
   };
 
-  const logout = () => {
-    clearDemoData();
-    endDemoSession();
+  const logout = async () => {
+    if (IS_DEMO_MODE) {
+      clearDemoData();
+      endDemoSession();
+    } else if (supabase) {
+      await supabase.auth.signOut();
+    }
+
     router.replace("/login").then(() => {
       dispatch({type: reducerCases.SET_USER_INFO, userInfo: undefined});
       dispatch({type: reducerCases.SET_MESSAGES, messages: []});
@@ -37,6 +44,7 @@ function ChatListHeader() {
   };
 
   const resetDemo = () => {
+    if (!IS_DEMO_MODE) return;
     clearDemoData();
     dispatch({type: reducerCases.SET_USER_INFO, userInfo: getDemoProfile()});
     dispatch({
@@ -46,8 +54,8 @@ function ChatListHeader() {
   };
 
   const menuOptions = [
-    {name: "Sair da demo", callback: logout},
-    {name: "Resetar demo", callback: resetDemo},
+    {name: "Sair", callback: logout},
+    ...(IS_DEMO_MODE ? [{name: "Restaurar conversas", callback: resetDemo}] : []),
   ];
 
   return( 
@@ -57,7 +65,7 @@ function ChatListHeader() {
       <Avatar type="sm" image={userInfo?.profileImage} />
       <div className="min-w-0">
         <div className="text-primary-strong font-semibold leading-5 truncate">ProjectChat</div>
-        <div className="text-secondary text-xs truncate">{userInfo?.name || "Demo local"}</div>
+        <div className="text-secondary text-xs truncate">{userInfo?.name || "Usuario"}</div>
       </div>
     </div>
     <div className="flex gap-5">
