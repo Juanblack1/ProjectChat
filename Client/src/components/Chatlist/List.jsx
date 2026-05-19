@@ -3,14 +3,15 @@ import { reducerCases } from "@/context/constants";
 import { getAiContact, getAiConversationPreview } from "@/utils/AiContact";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { DEMO_CONTACTS } from "@/utils/DemoData";
+import { translate } from "@/utils/I18n";
 import { getContactsWithPreviews, subscribeToProfiles, subscribeToUserMessages } from "@/utils/SupabaseChat";
 import { useI18n } from "@/utils/useI18n";
 import { useEffect, useState } from "react";
 import ChatLIstItem from "./ChatLIstItem";
 
 function List() {
-  const [{contactSearch, contactFilter, messages, userInfo, currentChatUser}, dispatch] = useStateProvider();
-  const { t } = useI18n();
+  const [{contactSearch, contactFilter, userInfo, currentChatUser}, dispatch] = useStateProvider();
+  const { t, language } = useI18n();
   const [realContacts, setRealContacts] = useState([]);
   const [error, setError] = useState("");
   const normalizedSearch = contactSearch.trim().toLowerCase();
@@ -29,7 +30,7 @@ function List() {
           setError("");
         }
       } catch {
-        if (active) setError(t("contacts.loadError"));
+        if (active) setError(translate("contacts.loadError", language));
       }
     };
 
@@ -44,7 +45,7 @@ function List() {
       unsubscribeProfiles();
       unsubscribeMessages();
     };
-  }, [currentChatUser?.id, dispatch, messages, t, userInfo?.id]);
+  }, [currentChatUser?.id, dispatch, language, userInfo?.id]);
 
   const sourceContacts = IS_DEMO_MODE ? DEMO_CONTACTS : realContacts;
   const aiContact = userInfo?.id ? {
