@@ -238,12 +238,9 @@ function MessageBar() {
       !showAudioRecorder && (
     <>
         <div className="flex gap-6">
-      <BsEmojiSmile
-      className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-      title="Emoji"
-      id="emoji-open"
-      onClick={handleEmojiModal}
-      />
+      <button type="button" className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong" title="Emoji" id="emoji-open" onClick={handleEmojiModal}>
+        <BsEmojiSmile />
+      </button>
       {
         showEmojiPicker && 
       <div className="absolute bottom-24 left-16 z-40"
@@ -279,18 +276,21 @@ function MessageBar() {
       />
     </div>
     <div className="flex w-10 items-center justify-center">
-        <button type="button" className="h-10 w-10 rounded-full hover:bg-background-default-hover flex items-center justify-center">
+      <button
+        type="button"
+        className="h-10 w-10 rounded-full hover:bg-background-default-hover flex items-center justify-center disabled:opacity-50"
+        disabled={aiSending || (!message.length && aiChat)}
+        onClick={message.length ? sendMessage : (!aiChat ? () => setShowAudioRecorder(true) : undefined)}
+      >
       {
         message.length? (
           <MdSend 
           className="text-icon-green cursor-pointer text-2xl"
           title={t("common.send")}
-          onClick={aiSending ? undefined : sendMessage}
           />):(!aiChat && (
           <FaMicrophone
           className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
           title={t("chat.record")}
-          onClick={() => setShowAudioRecorder(true)}
           />
       ))}
       </button>

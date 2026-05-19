@@ -5,6 +5,8 @@ import { IoClose } from "react-icons/io5";
 const MAX_CANVAS_SIZE = 1600;
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
+const DRAW_TOOLS = ["pen", "line", "arrow", "rectangle", "circle", "emoji"];
+const EMOJI_STAMPS = ["✅", "⭐", "🔥", "❤️", "📌", "⚠️", "👍", "😀"];
 
 const loadImage = (src) => new Promise((resolve, reject) => {
   const image = new window.Image();
@@ -28,13 +30,17 @@ function ImageCanvasEditor({
   const { t } = useI18n();
   const canvasRef = useRef(null);
   const drawingRef = useRef(false);
+  const draftImageRef = useRef(null);
+  const startPointRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(1);
-  const [drawMode, setDrawMode] = useState(defaultDrawMode);
+  const [activeTool, setActiveTool] = useState(defaultDrawMode ? "pen" : "move");
   const [brushColor, setBrushColor] = useState("#00a884");
   const [brushSize, setBrushSize] = useState(6);
+  const [selectedEmoji, setSelectedEmoji] = useState("⭐");
   const [undoStack, setUndoStack] = useState([]);
   const [error, setError] = useState("");
+  const drawMode = DRAW_TOOLS.includes(activeTool);
 
   const drawSource = useCallback(async (source) => {
     const canvas = canvasRef.current;
@@ -61,50 +67,169 @@ function ImageCanvasEditor({
   useEffect(() => {
     setUndoStack([]);
     setZoom(1);
+    setActiveTool(defaultDrawMode ? "pen" : "move");
     drawSource(initialImageSrc || imageSrc);
-  }, [drawSource, imageSrc, initialImageSrc]);
+  }, [defaultDrawMode, drawSource, imageSrc, initialImageSrc]);
 
-  const getCanvasPoint = (event) => {
+  const pushUndoState = useCallback((canvas) => {
+    setUndoStack((items) => [...items.slice(-14), canvas.toDataURL("image/png")]);
+  }, []);
+
+  const applyStrokeStyle = useCallback((context) => {
+    context.strokeStyle = brushColor;
+    context.fillStyle = brushColor;
+    context.lineWidth = brushSize;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+  }, [brushColor, brushSize]);
+
+  const drawArrowHead = useCallback((context, from, to) => {
+    const angle = Math.atan2(to.y - from.y, to.x - from.x);
+    const headLength = Math.max(14, brushSize * 3);
+    context.beginPath();
+    context.moveTo(to.x, to.y);
+    context.lineTo(to.x - headLength * Math.cos(angle - Math.PI / 6), to.y - headLength * Math.sin(angle - Math.PI / 6));
+    context.moveTo(to.x, to.y);
+    context.lineTo(to.x - headLength * Math.cos(angle + Math.PI / 6), to.y - headLength * Math.sin(angle + Math.PI / 6));
+    context.stroke();
+  }, [brushSize]);
+
+  const drawShape = useCallback((context, tool, start, end) => {
+    applyStrokeStyle(context);
+    const width = end.x - start.x;
+    const height = end.y - start.y;
+
+    if (tool === "line" || tool === "arrow") {
+      context.beginPath();
+      context.moveTo(start.x, start.y);
+      context.lineTo(end.x, end.y);
+      context.stroke();
+      if (tool === "arrow") drawArrowHead(context, start, end);
+      return;
+    }
+
+    if (tool === "rectangle") {
+      context.strokeRect(start.x, start.y, width, height);
+      return;
+    }
+
+    if (tool === "circle") {
+      const centerX = start.x + width / 2;
+      const centerY = start.y + height / 2;
+      context.beginPath();
+      context.ellipse(centerX, centerY, Math.abs(width / 2), Math.abs(height / 2), 0, 0, Math.PI * 2);
+      context.stroke();
+    }
+  }, [applyStrokeStyle, drawArrowHead]);
+
+  const drawEmoji = useCallback((context, point) => {
+    const size = Math.max(24, brushSize * 5);
+    context.save();
+    context.fillStyle = "rgba(17, 27, 33, 0.72)";
+    context.beginPath();
+    context.arc(point.x, point.y, size * 0.62, 0, Math.PI * 2);
+    context.fill();
+    context.font = `${size}px sans-serif`;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(selectedEmoji, point.x, point.y);
+    context.restore();
+  }, [brushSize, selectedEmoji]);
+
+  const getCanvasPoint = useCallback((event) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     return {
       x: (event.clientX - rect.left) * (canvas.width / rect.width),
       y: (event.clientY - rect.top) * (canvas.height / rect.height),
     };
-  };
+  }, []);
 
-  const startDrawing = (event) => {
+  const startDrawing = useCallback((event) => {
     if (!drawMode || busy || !canvasRef.current) return;
     event.preventDefault();
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
     const point = getCanvasPoint(event);
 
-    setUndoStack((items) => [...items.slice(-14), canvas.toDataURL("image/png")]);
+    pushUndoState(canvas);
     drawingRef.current = true;
-    canvas.setPointerCapture(event.pointerId);
-    context.beginPath();
-    context.moveTo(point.x, point.y);
-  };
+    startPointRef.current = point;
+    try {
+      canvas.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is best effort; drawing still works without it.
+    }
 
-  const draw = (event) => {
+    if (activeTool === "emoji") {
+      drawEmoji(context, point);
+      drawingRef.current = false;
+      return;
+    }
+
+    if (activeTool === "pen") {
+      applyStrokeStyle(context);
+      context.beginPath();
+      context.arc(point.x, point.y, brushSize / 2, 0, Math.PI * 2);
+      context.fill();
+      context.beginPath();
+      context.moveTo(point.x, point.y);
+      return;
+    }
+
+    draftImageRef.current = context.getImageData(0, 0, canvas.width, canvas.height);
+  }, [activeTool, applyStrokeStyle, brushSize, busy, drawEmoji, drawMode, getCanvasPoint, pushUndoState]);
+
+  const draw = useCallback((event) => {
     if (!drawingRef.current || !drawMode || !canvasRef.current) return;
     event.preventDefault();
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
     const point = getCanvasPoint(event);
 
-    context.strokeStyle = brushColor;
-    context.lineWidth = brushSize;
-    context.lineCap = "round";
-    context.lineJoin = "round";
+    if (activeTool !== "pen") {
+      if (draftImageRef.current) context.putImageData(draftImageRef.current, 0, 0);
+      drawShape(context, activeTool, startPointRef.current, point);
+      return;
+    }
+
+    applyStrokeStyle(context);
     context.lineTo(point.x, point.y);
     context.stroke();
-  };
+  }, [activeTool, applyStrokeStyle, drawMode, drawShape, getCanvasPoint]);
 
-  const stopDrawing = () => {
+  const stopDrawing = useCallback((event) => {
+    if (!drawingRef.current) return;
+    if (activeTool !== "pen" && activeTool !== "emoji" && event && startPointRef.current) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+      const point = getCanvasPoint(event);
+      if (draftImageRef.current) context.putImageData(draftImageRef.current, 0, 0);
+      drawShape(context, activeTool, startPointRef.current, point);
+    }
     drawingRef.current = false;
-  };
+    draftImageRef.current = null;
+    startPointRef.current = null;
+  }, [activeTool, drawShape, getCanvasPoint]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+
+    canvas.addEventListener("pointerdown", startDrawing);
+    canvas.addEventListener("pointermove", draw);
+    canvas.addEventListener("pointerup", stopDrawing);
+    canvas.addEventListener("pointercancel", stopDrawing);
+    canvas.addEventListener("pointerleave", stopDrawing);
+
+    return () => {
+      canvas.removeEventListener("pointerdown", startDrawing);
+      canvas.removeEventListener("pointermove", draw);
+      canvas.removeEventListener("pointerup", stopDrawing);
+      canvas.removeEventListener("pointercancel", stopDrawing);
+      canvas.removeEventListener("pointerleave", stopDrawing);
+    };
+  }, [draw, startDrawing, stopDrawing]);
 
   const undo = () => {
     const previous = undoStack[undoStack.length - 1];
@@ -138,9 +263,18 @@ function ImageCanvasEditor({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 px-4 md:px-6 py-3 border-b border-conversation-border bg-search-input-container-background">
-          <button type="button" className={`px-3 py-2 rounded-lg text-sm ${drawMode ? "bg-icon-green text-black" : "bg-panel-header-background text-primary-strong"}`} onClick={() => setDrawMode((value) => !value)}>
-            {drawMode ? t("image.drawingOn") : t("image.draw")}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {DRAW_TOOLS.map((tool) => (
+              <button
+                key={tool}
+                type="button"
+                className={`px-3 py-2 rounded-lg text-sm transition ${activeTool === tool ? "bg-icon-green text-black" : "bg-panel-header-background text-primary-strong hover:bg-background-default-hover"}`}
+                onClick={() => setActiveTool(tool)}
+              >
+                {t(`image.tool.${tool}`)}
+              </button>
+            ))}
+          </div>
           <button type="button" className="px-3 py-2 rounded-lg text-sm bg-panel-header-background text-primary-strong disabled:opacity-40" onClick={undo} disabled={!undoStack.length}>
             {t("image.undo")}
           </button>
@@ -160,6 +294,21 @@ function ImageCanvasEditor({
             {t("image.brush")}
             <input type="range" min="2" max="24" value={brushSize} onChange={(event) => setBrushSize(Number(event.target.value))} />
           </label>
+          {activeTool === "emoji" && (
+            <div className="flex items-center gap-1 rounded-lg bg-panel-header-background px-2 py-1">
+              {EMOJI_STAMPS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className={`h-8 w-8 rounded-md text-lg ${selectedEmoji === emoji ? "bg-icon-green/80" : "hover:bg-background-default-hover"}`}
+                  onClick={() => setSelectedEmoji(emoji)}
+                  aria-label={`${t("image.emoji")}: ${emoji}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-2 ml-auto">
             <button type="button" className="px-3 py-2 rounded-lg bg-panel-header-background text-primary-strong" onClick={() => setZoom((value) => Math.max(MIN_ZOOM, Number((value - 0.25).toFixed(2))))}>-</button>
             <span className="text-secondary text-sm w-12 text-center">{Math.round(zoom * 100)}%</span>
@@ -176,11 +325,6 @@ function ImageCanvasEditor({
                 width: canvasSize.width ? `${canvasSize.width * zoom}px` : undefined,
                 height: canvasSize.height ? `${canvasSize.height * zoom}px` : undefined,
               }}
-              onPointerDown={startDrawing}
-              onPointerMove={draw}
-              onPointerUp={stopDrawing}
-              onPointerCancel={stopDrawing}
-              onPointerLeave={stopDrawing}
             />
           </div>
         </div>

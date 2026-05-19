@@ -76,7 +76,7 @@ function ImageMessage({ message }) {
         initialImageSrc={displayUrl}
         title={t("chat.viewImage")}
         confirmLabel={t("chat.saveDrawing")}
-        defaultDrawMode={false}
+        defaultDrawMode={true}
         onClose={() => setViewerOpen(false)}
         onConfirm={saveLocalAnnotation}
         onReset={resetLocalAnnotation}
