@@ -1,5 +1,9 @@
 # ProjectChat
 
+<p align="center">
+  <img src="assets/cover.png" alt="ProjectChat cover" width="100%" />
+</p>
+
 ProjectChat is a WhatsApp-style chat app built with a Next.js client and Supabase for real email/password auth, contacts, Postgres message storage, and realtime updates.
 
 ## Public App
