@@ -1,5 +1,6 @@
 import { useStateProvider } from "@/context/StateContext";
 import { reducerCases } from "@/context/constants";
+import { getAiContact, getAiConversationPreview } from "@/utils/AiContact";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { DEMO_CONTACTS } from "@/utils/DemoData";
 import { getContactsWithPreviews, subscribeToProfiles, subscribeToUserMessages } from "@/utils/SupabaseChat";
@@ -46,7 +47,11 @@ function List() {
   }, [currentChatUser?.id, dispatch, messages, t, userInfo?.id]);
 
   const sourceContacts = IS_DEMO_MODE ? DEMO_CONTACTS : realContacts;
-  const contacts = sourceContacts.filter((contact) => {
+  const aiContact = userInfo?.id ? {
+    ...getAiContact({online: t("presence.online"), status: t("contacts.aiStatus")}),
+    ...getAiConversationPreview(userInfo.id, {photo: t("contacts.photo"), welcome: t("contacts.aiWelcome")}),
+  } : null;
+  const contacts = [...(aiContact ? [aiContact] : []), ...sourceContacts].filter((contact) => {
     const matchesSearch = !normalizedSearch ||
       contact.name.toLowerCase().includes(normalizedSearch) ||
       contact.about.toLowerCase().includes(normalizedSearch) ||

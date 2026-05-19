@@ -1,6 +1,8 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
+import { addAiMessages, createAiAssistantMessage, createAiUserMessage, isAiContact, saveAiMessages, toAiApiMessages } from "@/utils/AiContact";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
+import { getAssistantUiRequestMetadata } from "@/utils/AssistantUiRuntime";
 import { addDemoMessage, createDemoMessage, readFileAsDataUrl } from "@/utils/DemoData";
 import { sendMessage as sendSupabaseMessage } from "@/utils/SupabaseChat";
 import { useI18n } from "@/utils/useI18n";
@@ -18,7 +20,7 @@ const CaptureAudio = dynamic(() => import("../common/CaptureAudio"),{ssr:false})
 
 
 function MessageBar() {
-  const [{userInfo,currentChatUser}, dispatch] = useStateProvider();
+  const [{userInfo,currentChatUser,language}, dispatch] = useStateProvider();
   const { t } = useI18n();
   const [message, setMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -28,6 +30,8 @@ function MessageBar() {
   const [pendingImage, setPendingImage] = useState(null);
   const [sendingImage, setSendingImage] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [aiSending, setAiSending] = useState(false);
+  const aiChat = isAiContact(currentChatUser);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -69,6 +73,36 @@ function MessageBar() {
     setSendError("");
 
     try {
+      if (aiChat) {
+        const userMessage = createAiUserMessage({ userId: userInfo?.id, message: trimmedMessage });
+        const nextMessages = addAiMessages(userInfo?.id, [userMessage], {welcome: t("contacts.aiWelcome")});
+        dispatch({ type: reducerCases.ADD_MESSAGE, newMessage: userMessage });
+        setMessage("");
+        setAiSending(true);
+
+        const response = await fetch("/api/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            assistantUi: getAssistantUiRequestMetadata(),
+            language,
+            messages: toAiApiMessages(nextMessages, userInfo?.id),
+            prompt: trimmedMessage,
+          }),
+        });
+
+        if (!response.ok) throw new Error("AI request failed");
+        const data = await response.json();
+        const assistantMessage = createAiAssistantMessage({
+          userId: userInfo?.id,
+          type: data.type === "image" ? "image" : "text",
+          message: data.type === "image" ? data.image : data.text,
+        });
+        saveAiMessages(userInfo?.id, [...nextMessages, assistantMessage]);
+        dispatch({ type: reducerCases.ADD_MESSAGE, newMessage: assistantMessage });
+        return;
+      }
+
       if (IS_DEMO_MODE) {
         const newMessage = createDemoMessage({
           contactId: currentChatUser.id,
@@ -98,7 +132,9 @@ function MessageBar() {
       }
       setMessage("")
     } catch {
-      setSendError(t("chat.sendMessageError"));
+      setSendError(aiChat ? t("chat.aiError") : t("chat.sendMessageError"));
+    } finally {
+      setAiSending(false);
     }
   };
 
@@ -177,6 +213,11 @@ function MessageBar() {
         {sendError}
       </div>
     )}
+    {aiSending && !sendError && (
+      <div className="absolute bottom-full left-4 mb-2 rounded-lg border border-icon-green/20 bg-[#182229]/95 px-4 py-2 text-xs text-teal-light shadow-lg">
+        {t("chat.aiThinking")}
+      </div>
+    )}
     {
       !showAudioRecorder && (
     <>
@@ -195,20 +236,23 @@ function MessageBar() {
         <EmojiPicker onEmojiClick={handleEmojiClick} theme="dark" />
       </div>
       }
-      <ImAttachment
-      className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-      title={t("chat.attachFile")}
-      onClick={() => {
-        setGrabPhoto (true)
-      }}
-      />
+      {!aiChat && (
+        <ImAttachment
+        className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
+        title={t("chat.attachFile")}
+        onClick={() => {
+          setGrabPhoto (true)
+        }}
+        />
+      )}
     </div>
     <div className="w-full rounded-lg h-11 flex items-center">
       <input
       type="text"
-      placeholder={t("chat.messagePlaceholder")}
+        placeholder={aiChat ? t("chat.aiPlaceholder") : t("chat.messagePlaceholder")}
       className="bg-input-background text-sm focus:outline-none focus:ring-1 focus:ring-icon-green/60 text-white h-11 rounded-lg px-5 py-4 w-full placeholder:text-secondary"
       onChange={e => setMessage(e.target.value)}
+      disabled={aiSending}
       onKeyDown={(event) => {
         if (event.key === "Enter" && !event.shiftKey) {
           event.preventDefault();
@@ -225,14 +269,14 @@ function MessageBar() {
           <MdSend 
           className="text-icon-green cursor-pointer text-2xl"
           title={t("common.send")}
-          onClick={sendMessage}
-          />):(
-            <FaMicrophone
-            className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
-            title={t("chat.record")}
-            onClick={() => setShowAudioRecorder(true)}
-            />
-      )}
+          onClick={aiSending ? undefined : sendMessage}
+          />):(!aiChat && (
+          <FaMicrophone
+          className="text-panel-header-icon cursor-pointer text-xl hover:text-primary-strong"
+          title={t("chat.record")}
+          onClick={() => setShowAudioRecorder(true)}
+          />
+      ))}
       </button>
     </div>
     </>

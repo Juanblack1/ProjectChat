@@ -1,9 +1,11 @@
 import { reducerCases } from "@/context/constants";
 import { useStateProvider } from "@/context/StateContext";
+import { getAiMessages, isAiContact } from "@/utils/AiContact";
 import { IS_DEMO_MODE } from "@/utils/AppConfig";
 import { getDemoConversation, getDemoProfile, hasDemoSession } from "@/utils/DemoData";
 import { supabase } from "@/utils/SupabaseConfig";
 import { ensureProfile, getConversationMessages, markConversationRead, subscribeToMessages, updateLastSeen } from "@/utils/SupabaseChat";
+import { useI18n } from "@/utils/useI18n";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Chat from "./Chat/Chat";
@@ -15,6 +17,9 @@ import Empty from "./Empty";
 function Main() {
   const router = useRouter();
   const [{userInfo, currentChatUser, messagesSearch}, dispatch] = useStateProvider()
+  const { t } = useI18n();
+  const currentChatUserId = currentChatUser?.id;
+  const currentChatUserIsAi = isAiContact(currentChatUser);
   const [redirectLogin, setRedirectLogin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -112,22 +117,30 @@ function Main() {
 
     const getMessages = async () => {
       dispatch({type: reducerCases.SET_MESSAGES_LOADING, messagesLoading: true});
+      if (currentChatUserIsAi) {
+        dispatch({
+          type: reducerCases.SET_MESSAGES,
+          messages: getAiMessages(userInfo.id, {welcome: t("contacts.aiWelcome")}),
+        });
+        return;
+      }
+
       if (IS_DEMO_MODE) {
         dispatch({
           type: reducerCases.SET_MESSAGES,
-          messages: getDemoConversation(currentChatUser.id),
+          messages: getDemoConversation(currentChatUserId),
         });
         return;
       }
 
       try {
-        const messages = await getConversationMessages(userInfo.id, currentChatUser.id);
+        const messages = await getConversationMessages(userInfo.id, currentChatUserId);
         dispatch({
           type:reducerCases.SET_MESSAGES, messages
         });
-        await markConversationRead(userInfo.id, currentChatUser.id);
+        await markConversationRead(userInfo.id, currentChatUserId);
 
-        unsubscribe = subscribeToMessages(userInfo.id, currentChatUser.id, (newMessage) => {
+        unsubscribe = subscribeToMessages(userInfo.id, currentChatUserId, (newMessage) => {
           dispatch({type: reducerCases.ADD_MESSAGE, newMessage});
         });
       } catch (error) {
@@ -136,12 +149,12 @@ function Main() {
       }
     };
 
-    if(currentChatUser?.id && userInfo?.id){
+    if(currentChatUserId && userInfo?.id){
       getMessages();
     }
 
     return () => unsubscribe();
-  }, [currentChatUser?.id, dispatch, userInfo?.id])
+  }, [currentChatUserId, currentChatUserIsAi, dispatch, t, userInfo?.id])
 
   if (!authChecked) {
     return <LoadingScreen />;
