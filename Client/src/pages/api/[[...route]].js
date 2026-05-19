@@ -10,7 +10,14 @@ export const config = {
   },
 };
 
-const TEXT_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+const TEXT_MODELS = [
+  "gemini-2.5-flash-lite",
+  "gemini-flash-lite-latest",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-3-flash-preview",
+  "gemini-2.0-flash-lite",
+];
 const IMAGE_MODELS = ["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-3-pro-image-preview"];
 
 const PROJECTCHAT_AI_INSTRUCTIONS = `You are ProjectChat AI, a friendly person-like assistant inside a realtime chat app.
@@ -33,6 +40,16 @@ const getGoogleProvider = () => {
 };
 
 const sanitizeText = (value) => String(value || "").replace(/\s+/g, " ").trim().slice(0, 4000);
+
+const getErrorSummary = (error) => {
+  const cause = error?.cause;
+  return {
+    name: error?.name || "Error",
+    message: sanitizeText(error?.message).slice(0, 500),
+    statusCode: error?.statusCode || error?.status || cause?.statusCode || cause?.status,
+    code: error?.code || cause?.code,
+  };
+};
 
 const toConversationPrompt = (messages, fallbackPrompt, language) => {
   const recentMessages = Array.isArray(messages) ? messages.slice(-14) : [];
@@ -75,7 +92,7 @@ const runTextCascade = async ({ google, messages, prompt, language }) => {
       const result = await agent.generate(conversationPrompt);
       if (result?.text) return { text: result.text.trim(), model: modelId, framework: "mastra" };
     } catch (error) {
-      failures.push(error);
+      failures.push({ modelId, framework: "mastra", error: getErrorSummary(error) });
     }
 
     try {
@@ -87,11 +104,13 @@ const runTextCascade = async ({ google, messages, prompt, language }) => {
       });
       if (result.text) return { text: result.text.trim(), model: modelId, framework: "ai-sdk" };
     } catch (error) {
-      failures.push(error);
+      failures.push({ modelId, framework: "ai-sdk", error: getErrorSummary(error) });
     }
   }
 
-  throw new Error(`All text models failed: ${failures.length}`);
+  const error = new Error(`All text models failed: ${failures.length}`);
+  error.failures = failures;
+  throw error;
 };
 
 const runImageCascade = async ({ google, prompt }) => {
@@ -113,11 +132,13 @@ const runImageCascade = async ({ google, prompt }) => {
         };
       }
     } catch (error) {
-      failures.push(error);
+      failures.push({ modelId, error: getErrorSummary(error) });
     }
   }
 
-  throw new Error(`All image models failed: ${failures.length}`);
+  const error = new Error(`All image models failed: ${failures.length}`);
+  error.failures = failures;
+  throw error;
 };
 
 app.post("/ai/chat", async (c) => {
@@ -147,7 +168,11 @@ app.post("/ai/chat", async (c) => {
 
     const result = await runTextCascade({ google, messages: body.messages, prompt, language });
     return c.json({ type: "text", text: result.text, model: result.model, framework: result.framework });
-  } catch {
+  } catch (error) {
+    console.error("ProjectChat AI request failed", {
+      error: getErrorSummary(error),
+      failures: error?.failures,
+    });
     return c.json({ error: "AI_REQUEST_FAILED" }, 502);
   }
 });
