@@ -67,6 +67,16 @@ function MessageBar() {
     setMessage((prevMessage) => (prevMessage+=emoji.emoji))
   };
 
+  const addAiAssistantReply = (baseMessages, content, type = "text") => {
+    const assistantMessage = createAiAssistantMessage({
+      userId: userInfo?.id,
+      type,
+      message: content,
+    });
+    saveAiMessages(userInfo?.id, [...baseMessages, assistantMessage]);
+    dispatch({ type: reducerCases.ADD_MESSAGE, newMessage: assistantMessage });
+  };
+
   const sendMessage = async() => {
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
@@ -91,15 +101,16 @@ function MessageBar() {
           }),
         });
 
-        if (!response.ok) throw new Error("AI request failed");
         const data = await response.json();
-        const assistantMessage = createAiAssistantMessage({
-          userId: userInfo?.id,
-          type: data.type === "image" ? "image" : "text",
-          message: data.type === "image" ? data.image : data.text,
-        });
-        saveAiMessages(userInfo?.id, [...nextMessages, assistantMessage]);
-        dispatch({ type: reducerCases.ADD_MESSAGE, newMessage: assistantMessage });
+        if (!response.ok) {
+          addAiAssistantReply(nextMessages, data.error === "AI_NOT_CONFIGURED" ? t("chat.aiNotConfigured") : t("chat.aiError"));
+          return;
+        }
+        addAiAssistantReply(
+          nextMessages,
+          data.type === "image" ? data.image : data.text,
+          data.type === "image" ? "image" : "text"
+        );
         return;
       }
 
@@ -132,7 +143,12 @@ function MessageBar() {
       }
       setMessage("")
     } catch {
-      setSendError(aiChat ? t("chat.aiError") : t("chat.sendMessageError"));
+      if (aiChat) {
+        const currentAiMessages = addAiMessages(userInfo?.id, [], {welcome: t("contacts.aiWelcome")});
+        addAiAssistantReply(currentAiMessages, t("chat.aiError"));
+        return;
+      }
+      setSendError(t("chat.sendMessageError"));
     } finally {
       setAiSending(false);
     }
